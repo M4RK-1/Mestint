@@ -1,0 +1,345 @@
+import game.racetrack.Direction;
+import game.racetrack.RaceTrackGame;
+import game.racetrack.RaceTrackPlayer;
+import game.racetrack.utils.Cell;
+import game.racetrack.utils.Coin;
+import game.racetrack.utils.PlayerState;
+
+import java.util.List;
+import java.util.Random;
+
+class PositionWithParent1 {
+    int value;
+    int i;
+    int j;
+    int parent_value;
+    int parent_i;
+    int parent_j;
+
+
+    public PositionWithParent1(int value, int i, int j, int parent_value, int parent_i, int parent_j) {
+        this.value = value;
+        this.i = i;
+        this.j = j;
+        this.parent_value=parent_value;
+        this.parent_i = parent_i;
+        this.parent_j = parent_j;
+    }
+    public PositionWithParent1(int value, int i, int j) {
+        this.value = value;
+        this.i = i;
+        this.j = j;
+        this.parent_value=-1;
+        this.parent_i = -1;
+        this.parent_j = -1;
+    }
+
+    public void copy(PositionWithParent1 other){
+        this.value = other.value;
+        this.i = other.i;
+        this.j = other.j;
+        this.parent_i = other.parent_i;
+        this.parent_j = other.parent_j;
+    }
+
+}
+
+public class SamplePlayer1 extends RaceTrackPlayer {
+    public SamplePlayer1(PlayerState state, Random random, int[][] track, Coin[] coins, int color) {
+        super(state, random, track, coins, color);
+    }
+//     public Coin[] collectedCoins= new Coin[coins.length];
+//     public int collectedCoinIndex = 0;
+    public int[][] myTrack = track;
+    public Cell lastPosition= toCell(state);
+
+
+
+
+    @Override
+    public Direction getDirection(long remainingTime) {
+
+        if (lastPosition!=toCell(state)){
+            List<Cell> felvevoMezok = game.racetrack.RaceTrackGame.line4connect(lastPosition,toCell(state));
+            for (Cell c: felvevoMezok) {
+                myTrack[c.i][c.j]=1;
+            }
+        }
+
+
+        if (random.nextInt(100) < 20) {
+            lastPosition= toCell(state);
+            return RaceTrackGame.DIRECTIONS[random.nextInt(RaceTrackGame.DIRECTIONS.length)];
+        }
+
+
+
+        int[][] neighbors = {
+                {0, -1}, {-1, -1}, {-1, 0}, {-1, 1},
+                {0, 1}, {1, 1}, {1, 0}, {1, -1}
+        };
+
+//        collectedCoins[0]=this.coins[0];
+
+
+//        int[][] coinNeighbours = {
+//                {0, 0},{0, -1}, {-1, -1}, {-1, 0}, {-1, 1},
+//                {0, 1}, {1, 1}, {1, 0}, {1, -1}
+//        };
+//
+//        for (int i = 0; i < coinNeighbours.length; i++) {
+//            int newRow = this.state.i + coinNeighbours[i][0];
+//            int newCol = this.state.j + coinNeighbours[i][1];
+//            try {
+//                for (Coin c1 : coins) {
+//                    if (c1.i == newRow && c1.j == newCol) {
+//                        myTrack[newRow][newCol]=0;
+//                    }
+//                }
+//            } catch (Exception ignored) {
+//            }
+//        }
+
+
+
+
+
+//        //region map kiir
+//        for (int i = 0; i < track.length; i++) {
+//            for (int j = 0; j < track[0].length; j++) {
+//                switch (track[i][j]) {
+//                    case 1:
+//                        System.out.print("  ");
+//                        break;//üres
+//                    case 2:
+//                        System.out.print("X ");
+//                        break;//fal
+//                    case 5:
+//                        System.out.print("F ");
+//                        break;//cél
+//                    case 17:
+//                        System.out.print("C ");
+//                        break;//pénz
+//                    case 33:
+//                        System.out.print("M ");
+//                        break;//literálisan én
+//                    default:
+//                        System.out.print("HIBAAAAAAAAAAAA");//hiba
+//                }
+//
+//            }
+//            System.out.println();
+//        }
+//        //endregion
+
+
+
+        //region map copy
+        PositionWithParent1[][] findPath = new PositionWithParent1[myTrack.length][myTrack[0].length];
+        for (int i = 0; i < myTrack.length; i++) {
+            for (int j = 0; j < myTrack[i].length; j++) {
+                if (myTrack[i][j] == 1) {
+                    findPath[i][j] = new PositionWithParent1(0,i,j);
+                } else if (myTrack[i][j] == 2) {
+                    findPath[i][j] = new PositionWithParent1(-1,i,j);
+                } else if (myTrack[i][j] == 5) {
+                    findPath[i][j] = new PositionWithParent1(-2,i,j);
+                } else if (myTrack[i][j] == 17) {
+                    findPath[i][j] = new PositionWithParent1(-3,i,j);
+                } else if (myTrack[i][j] == 33) {
+                    findPath[i][j] = new PositionWithParent1(0,i,j);
+                } else {
+                    findPath[i][j] = new PositionWithParent1(-100,i,j);
+                }
+                findPath[state.i][state.j] = new PositionWithParent1(1,i,j);
+
+            }
+        }
+        //endregion
+
+        //region kozeli lepes
+        for (int i = 0; i < neighbors.length; i++) {
+            int newRow = this.state.i + neighbors[i][0];
+            int newCol = this.state.j + neighbors[i][1];
+            try {
+                if (findPath[newRow][newCol].value == -2||findPath[newRow][newCol].value == -3) {
+                    return RaceTrackGame.DIRECTIONS[i+1];
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        //endregion
+
+
+
+//        for (int i = 0; i < findPath.length; i++) {
+//            for (int j = 0; j < findPath[0].length; j++) {
+//                if (track[i][j] < 0) {
+//                    System.out.print(findPath[i][j] + " ");
+//                } else {
+//                    System.out.print(" " + findPath[i][j] + " ");
+//                }
+//            }
+//            System.out.println();
+//        }
+
+
+
+
+
+        PositionWithParent1 kovetkezoCel=new PositionWithParent1(0,0,0);
+
+        int c =1;
+        outerLoop:
+        for (c = 1; c<1000; c++) {
+            for (int i = 0; i < findPath.length; i++) {
+                for (int j = 0; j < findPath[0].length; j++) {
+                    if (findPath[i][j].value == c) {
+                        for (int[] neighbor : neighbors) {
+                            int newRow = i + neighbor[0];
+                            int newCol = j + neighbor[1];
+                            try {
+                                if ((findPath[newRow][newCol].value == 0||findPath[newRow][newCol].value > c + 1)
+                                        ||(findPath[newRow][newCol].value == -3 || findPath[newRow][newCol].value == -2)){
+                                    findPath[newRow][newCol].parent_value = findPath[i][j].value;
+                                    findPath[newRow][newCol].parent_i = findPath[i][j].i;
+                                    findPath[newRow][newCol].parent_j = findPath[i][j].j;
+                                }
+
+                                if (findPath[newRow][newCol].value == 0||findPath[newRow][newCol].value > c + 1)
+                                    findPath[newRow][newCol].value = c + 1;
+                                else if (findPath[newRow][newCol].value == -2 || findPath[newRow][newCol].value == -3) {
+                                    kovetkezoCel=findPath[newRow][newCol];
+                                    break outerLoop;
+                                }
+                            } catch (Exception ignored) {}
+
+
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < findPath.length; i++) {
+            for (int j = 0; j < findPath[0].length; j++) {
+                if (findPath[i][j].value==c+1) {
+                    findPath[i][j].value=0;
+                }
+            }
+        }
+
+
+        //PrintPathFindMap(findPath);
+
+
+        for (int x = 0;x<1000; x++) {
+            PositionWithParent1 currentCell = findPath[kovetkezoCel.parent_i][kovetkezoCel.parent_j];
+            for (int i = 0; i < findPath.length; i++) {
+                for (int j = 0; j < findPath[0].length; j++) {
+                    if (findPath[i][j].value==currentCell.value){
+                        if (!(i==currentCell.i&&j== currentCell.j)) {
+                            findPath[i][j].value=0;
+                        }
+                    }
+                }
+            }
+            kovetkezoCel = currentCell;
+            if (kovetkezoCel.value==2){
+                break;
+            }
+        }
+
+        //PrintPathFindMap(findPath);
+
+        int max=0;
+        for (int i = 0; i < neighbors.length; i++) {
+            int newRow = this.state.i + neighbors[i][0];
+            int newCol = this.state.j + neighbors[i][1];
+            try {
+                if (findPath[newRow][newCol].value > 1) {
+                    max=i+1;
+                    break;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+
+
+
+        lastPosition= toCell(state);
+        return RaceTrackGame.DIRECTIONS[max];
+    }
+
+
+    private void PrintPathFindMap(PositionWithParent1[][] findPath) {
+        for (int i = 0; i < findPath.length; i++) {
+            for (int j = 0; j < findPath[0].length; j++) {
+                switch (findPath[i][j].value) {
+                    case 0 ->  System.out.print(" ");
+                    case -1 -> System.out.print("X");
+                    case -2 -> System.out.print("F");
+                    case -3 -> System.out.print("C");
+                    case 1 ->  System.out.print("P");
+                    default -> System.out.print(findPath[i][j].value%10  + "");
+                }
+            }
+            System.out.println();
+        }
+
+    }
+
+    void createCircle(int[][] array, int centerX, int centerY, int radius) {
+
+        int[][] korbe = {
+                {0, -1}, {-1, -1}, {-1, 0}, {-1, 1},
+                {0, 1}, {1, 1}, {1, 0}, {1, -1}
+        };
+
+        array[centerX][centerY]=-5;
+
+
+
+        for (int x = 0; x < radius; x++) {
+            for (int i = 0; i < array.length; i++) {
+                for (int j = 0; j < array[0].length; j++) {
+                    if (array[i][j]==(array[centerX][centerY]-x)){
+                        for (int[] neighbor : korbe) {
+                            int newRow = i + neighbor[0];
+                            int newCol = j + neighbor[1];
+                            try {
+                                if (array[newRow][newCol] == 0 || array[newRow][newCol] == -4) {
+                                    array[newRow][newCol] = (array[centerX][centerY]-1-x);
+                                }
+                            } catch (Exception ignored) {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < array.length; i++) {
+            for (int j = 0; j < array[i].length; j++) {
+                if (array[i][j]<-4) array[i][j]=-4;
+            }
+        }
+
+        array[centerX][centerY]=-3;
+
+    }
+
+    public Cell toCell(PlayerState ps) {
+        return new Cell(ps.i, ps.j);
+    }
+}
+
+
+
+
+//java -jar game_engine.jar 0 game.racetrack.RaceTrackGame 11 27 5 0.1 10 1234567890 1000 SamplePlayer
+
+//java -jar game_engine.jar 0 game.racetrack.RaceTrackGame 11 27 5 0.1 10 1234567890 1000 SamplePlayer
+
+//java -jar game_engine.jar 100 game.racetrack.RaceTrackGame 11 27 5 0.1 10 $((Get-Random -Minimum 0 -Maximum 999999999)) 1000 SamplePlayer
