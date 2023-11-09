@@ -349,19 +349,16 @@ public class SamplePlayer extends RaceTrackPlayer {
             for (int j = 0; j < findPath[0].length; j++) {
                 if (findPath[i][j].value > 1) {
                     vectorParsing[i][j] = new VectorFittingData(1, i, j);
-                } else if (findPath[i][j].value == 1) {
-                    vectorParsing[i][j] = new VectorFittingData(2, i, j);
-                    ;
-                } else {
-                    vectorParsing[i][j] = new VectorFittingData(0, i, j);
-                    ;
+                }else {
+                    if (findPath[i][j].value==-2) vectorParsing[i][j] = new VectorFittingData(3, i, j);
+                    else vectorParsing[i][j] = new VectorFittingData(-1, i, j);
                 }
             }
         }
 
 
         int[] vectorStartingPosition = {state.i, state.j};
-        vectorParsing[vectorStartingPosition[0]][vectorStartingPosition[1]].value = 3;
+        vectorParsing[vectorStartingPosition[0]][vectorStartingPosition[1]].value = 2;
 
         System.out.println("Values");
         for (int i = 0; i < vectorParsing.length; i++) {
@@ -461,7 +458,7 @@ public class SamplePlayer extends RaceTrackPlayer {
                 for (int i1 = 0; i1 < vectorParsing.length; i1++) {
                     System.out.print(i1 % 10);
                     for (int j2 = 0; j2 < vectorParsing[0].length; j2++) {
-                        if (vectorParsing[i1][j2].value == 0) System.out.print(" ");
+                        if (vectorParsing[i1][j2].value == -1) System.out.print(" ");
                         else System.out.print(vectorParsing[i1][j2].value);
                     }
                     System.out.println();
