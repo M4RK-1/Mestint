@@ -5,6 +5,8 @@ import game.racetrack.utils.Cell;
 import game.racetrack.utils.Coin;
 import game.racetrack.utils.PlayerState;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Random;
 
 public class SamplePlayer extends RaceTrackPlayer {
@@ -15,9 +17,11 @@ public class SamplePlayer extends RaceTrackPlayer {
         int j;
         int parent_i;
         int parent_j;
+
+        int maxSpeed = 3;
         boolean inUse;
 
-        public VectorFittingData(int value,int i, int j, int parent_i, int parent_j, boolean inUse) {
+        public VectorFittingData(int value, int i, int j, int parent_i, int parent_j, boolean inUse) {
             this.value = value;
             this.i = i;
             this.j = j;
@@ -30,9 +34,9 @@ public class SamplePlayer extends RaceTrackPlayer {
             this.value = value;
             this.i = i;
             this.j = j;
-            this.parent_i=-1;
-            this.parent_j=-1;
-            this.inUse=false;
+            this.parent_i = -1;
+            this.parent_j = -1;
+            this.inUse = false;
         }
     }
 
@@ -84,7 +88,6 @@ public class SamplePlayer extends RaceTrackPlayer {
 
     @Override
     public Direction getDirection(long remainingTime) {
-
 
 
         if (lastPosition != toCell(state)) {
@@ -335,7 +338,7 @@ public class SamplePlayer extends RaceTrackPlayer {
                 break;
             }
         }
-        PrintPathMap(findPath);
+        //PrintPathMap(findPath);
 
         //endregion
 
@@ -343,126 +346,136 @@ public class SamplePlayer extends RaceTrackPlayer {
         //region vector fitting
 
 
+        //region map copy
+
         VectorFittingData[][] vectorParsing = new VectorFittingData[myTrack.length][myTrack[0].length];
 
         for (int i = 0; i < findPath.length; i++) {
             for (int j = 0; j < findPath[0].length; j++) {
                 if (findPath[i][j].value > 1) {
                     vectorParsing[i][j] = new VectorFittingData(1, i, j);
-                }else {
-                    if (findPath[i][j].value==-2) vectorParsing[i][j] = new VectorFittingData(3, i, j);
+                } else {
+                    if (findPath[i][j].value == -2) vectorParsing[i][j] = new VectorFittingData(3, i, j);
                     else vectorParsing[i][j] = new VectorFittingData(-1, i, j);
                 }
             }
         }
 
-
         int[] vectorStartingPosition = {state.i, state.j};
         vectorParsing[vectorStartingPosition[0]][vectorStartingPosition[1]].value = 2;
+        //endregion
 
-        System.out.println("Values");
+        //region trace print
+        /*System.out.println("Values");
         for (int i = 0; i < vectorParsing.length; i++) {
             for (int j = 0; j < vectorParsing[0].length; j++) {
                 if (vectorParsing[i][j].value == 0) System.out.print(" ");
                 else System.out.print(vectorParsing[i][j].value);
             }
             System.out.println();
-        }
+        }*/
+
+        //endregion
+
+        Comparator<int[]> customComparator = new Comparator<int[]>() {
+            @Override
+            public int compare(int[] array1, int[] array2) {
+                int lastElement1 = array1[array1.length - 1];
+                int lastElement2 = array2[array2.length - 1];
+                return Integer.compare(lastElement1, lastElement2);
+            }
+        };
 
         int[] speedVector = {0, 0};
-        java.util.List<Integer> moveList = new java.util.ArrayList<>();
-        vectorStartingPosition = new int[]{state.i, state.j};
         int[] vectorPointingPosition = new int[]{state.i, state.j};
+
+        vectorStartingPosition = new int[]{state.i, state.j};
+        ArrayList<Integer> moveList = new ArrayList<>();
+        ArrayList<Cell> touchedCells = new java.util.ArrayList<>();
+        ArrayList<int[]> touchedCellsSpeedVectors = new java.util.ArrayList<>();
+        ArrayList<ArrayList<int[]>> touchedCellsValidStepCells = new java.util.ArrayList<>();
+        ArrayList<Integer> touchedCellsValidSteps = new java.util.ArrayList<>();
+
+        touchedCells.add(new Cell(vectorStartingPosition[0], vectorStartingPosition[1]));
+        touchedCellsSpeedVectors.add(new int[]{speedVector[0], speedVector[1]});
+        touchedCellsValidSteps.add(1);
+
+
         boolean vectorListDone = true;
+
         int[][] vectorNeighbors = {
                 {0, 0}, {0, -1}, {-1, -1}, {-1, 0},
                 {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}
         };
-        int vectorCounter = 0;
 
+        int vectorCounter = 0;
         vectorFittingWhile:
-        while (vectorCounter < 1000) {
+        while (vectorCounter < 10000000) {
+            vectorStartingPosition[0] = touchedCells.get(touchedCells.size() - 1).i;
+            vectorStartingPosition[1] = touchedCells.get(touchedCells.size() - 1).j;
+            speedVector = touchedCellsSpeedVectors.get(touchedCellsSpeedVectors.size() - 1);
             System.out.println("======================================================================================");
             vectorCounter++;
-            double maxVectorDistance = 0;
             Cell currentCell = new Cell(vectorStartingPosition[0], vectorStartingPosition[1]);
-
             vectorPointingPosition[0] = vectorStartingPosition[0] + speedVector[0];
             vectorPointingPosition[1] = vectorStartingPosition[1] + speedVector[1];
-            System.out.println("A mezo amire a vektor mutat:(" + vectorPointingPosition[0] + "," + vectorPointingPosition[1] + ")");
 
+            System.out.println("A mezo amire a vektor mutat:(" + vectorPointingPosition[0] + "," + vectorPointingPosition[1] + ")");
+            System.out.println("A mezo amin allunk:(" + currentCell.i + "," + currentCell.j + ")");
 
             boolean talalt = false;
+            int lepesDarab = 0;
 
-            int bestLepesSorszam = -1;
-            int bestNewRow=0;
-            int bestNewCol=0;
+
+            //region search neighbours
+            ArrayList<int[]> validCells = new ArrayList<>();
             for (int i = 0; i < vectorNeighbors.length; i++) {
-                System.out.println("A lepes sorszame:" + i);
-
+                //System.out.println("\nA lepes sorszame:" + i);
 
                 int newRow = vectorPointingPosition[0] + vectorNeighbors[i][0];
                 int newCol = vectorPointingPosition[1] + vectorNeighbors[i][1];
                 Cell newCell = new Cell(newRow, newCol);
-                System.out.println();
+
+
                 if (vectorParsing[newRow][newCol].value == 1)
-                    System.out.println("Az eukledeszi tavolsag:" + RaceTrackGame.euclideanDistance(currentCell, newCell));
+                    //System.out.println("Az eukledeszi tavolsag:" + RaceTrackGame.euclideanDistance(currentCell, newCell));
                 try {
                     if (vectorParsing[newRow][newCol].value == 3) {
+                        System.out.println("WIIIIIIINNNN");
                         break vectorFittingWhile;
                     }
 
-                    if (vectorParsing[newRow][newCol].value == 1 && RaceTrackGame.euclideanDistance(currentCell, newCell) > maxVectorDistance) {
-                        System.out.println();
-                        System.out.println("A " + vectorCounter + ". lepes kordinatái: (" + newRow + "," + newCol + ")");
-                        System.out.println("Az aktualis mezo" + currentCell);
-                        System.out.println("A sebbeseg vektor:(" + speedVector[0] + "," + speedVector[1] + ")");
-                        System.out.println("A lista merete:" + moveList.size() + " Az iteraciók szama:" + vectorCounter);
-                        System.out.println("A lepes iranya:(" + vectorNeighbors[i][0] + "," + vectorNeighbors[i][1] + ")");
-                        System.out.println("A mezo amit eppen vizsgalunk:(" + newRow + "," + newCol + ")");
-                        System.out.println();
-
-                        //print
-
-
+                    if (vectorParsing[newRow][newCol].value == 1) {
+                        //System.out.println("A " + vectorCounter + ". lepes kordinatai: (" + newRow + "," + newCol + ")");System.out.println("Az aktualis mezo" + currentCell);System.out.println("A sebbeseg vektor:(" + speedVector[0] + "," + speedVector[1] + ")");System.out.println("A lista merete:" + moveList.size() + " Az iteraciok szama:" + vectorCounter);System.out.println("A lepes iranya:(" + vectorNeighbors[i][0] + "," + vectorNeighbors[i][1] + ")");System.out.println("A mezo amit eppen vizsgalunk:(" + newRow + "," + newCol + ")");System.out.println();
                         talalt = true;
-                        bestLepesSorszam = i;
-                        bestNewRow = newRow;
-                        bestNewCol = newCol;
-
-
-
-                        maxVectorDistance = RaceTrackGame.euclideanDistance(currentCell, newCell);
-
-
+                        validCells.add(new int[]{i, newRow, newCol, (int) (RaceTrackGame.euclideanDistance(currentCell, newCell) * 10)});
+                        lepesDarab++;
                     }
-
                 } catch (Exception ignored) {
                 }
             }
-            if (talalt) {
-                moveList.add(bestLepesSorszam);
-                vectorParsing[bestNewRow][bestNewCol].value = 0;
-                vectorStartingPosition[0] = bestNewRow;
-                vectorStartingPosition[1] = bestNewCol;
-                speedVector[0] += vectorNeighbors[bestLepesSorszam][0];
-                speedVector[1] += vectorNeighbors[bestLepesSorszam][1];
 
-            }
-            else {
+            validCells.sort(customComparator);
+            validCells.reversed();
+            //endregion
+            if (talalt) {
+
+                //region addnew
+                AddNewCell(moveList, validCells, vectorParsing, touchedCellsValidSteps, lepesDarab, touchedCells, touchedCellsSpeedVectors, speedVector, vectorNeighbors, touchedCellsValidStepCells);
+                //endregion
+
+
+            } else {
                 debug("Nem talalt");
-                System.out.println("ParentValues:");
-                for (int i1 = 0; i1 < vectorParsing[0].length; i1++) {
-                    System.out.print(i1 % 10);
+                PrintVectorMap(vectorParsing);
+                for (int i = 0; i < touchedCells.size(); i++) {
+                    System.out.println("Aktualis mezo: " + touchedCells.get(i) + " | Speed vector: " + touchedCellsSpeedVectors.get(i)[0] + ":" + touchedCellsSpeedVectors.get(i)[1] + " | Valid steps: " + touchedCellsValidSteps.get(i));
                 }
-                for (int i1 = 0; i1 < vectorParsing.length; i1++) {
-                    System.out.print(i1 % 10);
-                    for (int j2 = 0; j2 < vectorParsing[0].length; j2++) {
-                        if (vectorParsing[i1][j2].value == -1) System.out.print(" ");
-                        else System.out.print(vectorParsing[i1][j2].value);
-                    }
-                    System.out.println();
-                }
+
+                //region delete old
+                DeleteLastCell(vectorParsing, touchedCells, touchedCellsSpeedVectors, touchedCellsValidSteps, moveList, touchedCellsValidStepCells);
+                //endregion
+
                 break vectorFittingWhile;
             }
         }
@@ -471,6 +484,54 @@ public class SamplePlayer extends RaceTrackPlayer {
 
         lastPosition = toCell(state);
         return RaceTrackGame.DIRECTIONS[6];
+    }
+
+    private static void DeleteLastCell(VectorFittingData[][] vectorParsing, ArrayList<Cell> touchedCells, ArrayList<int[]> touchedCellsSpeedVectors, ArrayList<Integer> touchedCellsValidSteps, ArrayList<Integer> moveList, ArrayList<ArrayList<int[]>> touchedCellsValidStepCells) {
+
+        vectorParsing[touchedCells.get(touchedCells.size() - 1).i]
+                [touchedCells.get(touchedCells.size() - 1).j].value = 1;
+        vectorParsing[touchedCells.get(touchedCells.size() - 1).i]
+                [touchedCells.get(touchedCells.size() - 1).j].inUse = false;
+        touchedCells.remove(touchedCells.size() - 1);
+        touchedCellsSpeedVectors.remove(touchedCellsSpeedVectors.size() - 1);
+        touchedCellsValidSteps.remove(touchedCellsValidSteps.size() - 1);
+        moveList.remove(moveList.size() - 1);
+        touchedCellsValidStepCells.remove(touchedCellsValidStepCells.size() - 1);
+    }
+
+    private static void AddNewCell(ArrayList<Integer> moveList, ArrayList<int[]> validCells, VectorFittingData[][] vectorParsing, ArrayList<Integer> touchedCellsValidSteps, int lepesDarab, ArrayList<Cell> touchedCells, ArrayList<int[]> touchedCellsSpeedVectors, int[] speedVector, int[][] vectorNeighbors, ArrayList<ArrayList<int[]>> touchedCellsValidStepCells) {
+        moveList.add(validCells.get(validCells.size() - 1)[0]);
+
+        vectorParsing[validCells.get(validCells.size() - 1)[1]]
+                [validCells.get(validCells.size() - 1)[2]].value = 0;
+
+        vectorParsing[validCells.get(validCells.size() - 1)[1]]
+                [validCells.get(validCells.size() - 1)[2]].inUse = true;
+
+        touchedCellsValidSteps.add(lepesDarab);
+
+        touchedCells.add(new Cell(validCells.get(validCells.size() - 1)[1],
+                validCells.get(validCells.size() - 1)[2]));
+
+        touchedCellsSpeedVectors.add(new int[]{speedVector[0] + vectorNeighbors[validCells.get(validCells.size() - 1)[0]][0],
+                speedVector[1] + vectorNeighbors[validCells.get(validCells.size() - 1)[0]][1]});
+
+        touchedCellsValidStepCells.add(validCells);
+    }
+
+    private void PrintVectorMap(VectorFittingData[][] vectorParsing) {
+        System.out.println("ParentValues:");
+        for (int i1 = 0; i1 < vectorParsing[0].length; i1++) {
+            System.out.print(i1 % 10);
+        }
+        for (int i1 = 0; i1 < vectorParsing.length; i1++) {
+            System.out.print(i1 % 10);
+            for (int j2 = 0; j2 < vectorParsing[0].length; j2++) {
+                if (vectorParsing[i1][j2].value == -1) System.out.print(" ");
+                else System.out.print(vectorParsing[i1][j2].value);
+            }
+            System.out.println();
+        }
     }
 
 
