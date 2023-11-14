@@ -73,6 +73,7 @@ public class SamplePlayer extends RaceTrackPlayer {
             this.j = other.j;
             this.parent_i = other.parent_i;
             this.parent_j = other.parent_j;
+            this.parent_value = other.parent_value;
         }
 
     }
@@ -98,83 +99,14 @@ public class SamplePlayer extends RaceTrackPlayer {
             }
         }
         for (int j = 0; j < coins.length; j++) {
-            findPath[coins[j].i][coins[j].j]=((j+2)*-1);
+            findPath[coins[j].i][coins[j].j] = ((j + 2) * -1);
         }
 
-        /*for (int i = 0; i < findPath.length; i++) {
-            for (int j = 0; j < findPath[i].length; j++) {
-                switch (findPath[i][j]) {
-                    case 0 -> System.out.print(" ");
-                    case -100 -> System.out.print("X");
-                    default -> System.out.print(Math.abs(findPath[i][j] % 10) + "");
-                }
-            }
-            System.out.println();
-        }*/
 
         for (int actualNumber = -1; actualNumber > -13; actualNumber--) {
-            GetAllDistances(findPath,actualNumber);
-        }
-        /*int numVertices = distanceMatrix.length;
-        int startVertex = 0; // Replace with your fixed starting vertex
-        int endVertex = 11; // Replace with your fixed ending vertex
-        int numRemainingVertices = numVertices - 1;
-
-        List<Integer> bestPath = null;
-        int shortestDistance = Integer.MAX_VALUE;
-
-        // Generate all possible permutations of 10 remaining vertices (excluding start and end)
-        int[] permutation = new int[10];
-        for (int i1 = 1; i1 < numRemainingVertices; i1++) {
-            permutation[0] = i1;
-            for (int i2 = 1; i2 < numRemainingVertices; i2++) {
-                permutation[1] = i2;
-                for (int i3 =  1; i3 < numRemainingVertices; i3++) {
-                    permutation[2] = i3;
-                    for (int i4 =  1; i4 < numRemainingVertices; i4++) {
-                        permutation[3] = i4;
-                        for (int i5 =  1; i5 < numRemainingVertices; i5++) {
-                            permutation[4] = i5;
-                            for (int i6 =  1; i6 < numRemainingVertices; i6++) {
-                                permutation[5] = i6;
-                                for (int i7 =  1; i7 < numRemainingVertices; i7++) {
-                                    permutation[6] = i7;
-                                    for (int i8 =  1; i8 < numRemainingVertices; i8++) {
-                                        permutation[7] = i8;
-                                        for (int i9 =  1; i9 < numRemainingVertices; i9++) {
-                                            permutation[8] = i9;
-                                            for (int i10 =  1; i10 < numRemainingVertices; i10++) {
-                                                permutation[9] = i10;
-
-                                                // Create a path by adding the fixed start and end vertices
-                                                List<Integer> currentPath = new ArrayList<>();
-                                                currentPath.add(startVertex);
-                                                for (int vertex : permutation) {
-                                                    currentPath.add(vertex);
-                                                }
-                                                currentPath.add(endVertex);
-
-                                                int currentDistance = calculateTotalDistance(currentPath, distanceMatrix);
-
-                                                if (currentDistance < shortestDistance) {
-                                                    shortestDistance = currentDistance;
-                                                    bestPath = currentPath;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            GetAllDistances(findPath, actualNumber);
         }
 
-
-
-
-        */
 
         int[] nums = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         List<int[]> permutations = new ArrayList<>();
@@ -186,10 +118,9 @@ public class SamplePlayer extends RaceTrackPlayer {
         int shortestDistance = Integer.MAX_VALUE;
 
         for (int[] permutation : permutations) {
-            // Create a path by adding the fixed start and end vertices
             List<Integer> currentPath = new ArrayList<>();
             currentPath.add(0);
-            for (int num: permutation) {
+            for (int num : permutation) {
                 currentPath.add(num);
             }
             currentPath.add(11);
@@ -202,11 +133,16 @@ public class SamplePlayer extends RaceTrackPlayer {
             }
         }
 
+
+        for (int index : bestPath) {
+            if (index == 0) destinationList.add(new Cell(2, 7));
+            else if (index == 11) destinationList.add(new Cell(3, 127));
+            else destinationList.add(new Cell(coins[index - 1].i, coins[index - 1].j));
+        }
+
         //System.out.println("Path: " + bestPath);System.out.println("Total Distance: " + shortestDistance);
 
     }
-
-
 
 
     public int[][] myTrack = track;
@@ -215,12 +151,16 @@ public class SamplePlayer extends RaceTrackPlayer {
 
     List<Integer> bestPath = null;
 
-    public boolean findRoute=true;
+    List<Cell> destinationList = new ArrayList<>();
+
+    ArrayList<PositionWithParent[][]> stepPaths = new ArrayList<>();
+
+    ArrayList<PositionWithParent> combinedRouteCellsList = new ArrayList<>();
+
+    public boolean findRoute = true;
 
     public ArrayList<Integer> moveList = new ArrayList<>();
     public int moveListCounter = -1;
-
-
 
 
     public game.racetrack.utils.Cell lastPosition = toCell(state);
@@ -236,22 +176,7 @@ public class SamplePlayer extends RaceTrackPlayer {
     public Direction getDirection(long remainingTime) {
 
 
-        if (lastPosition != toCell(state)) {
-            java.util.List<game.racetrack.utils.Cell> felvevoMezok = game.racetrack.RaceTrackGame.lineCrossing(lastPosition, toCell(state));
-            for (game.racetrack.utils.Cell c : felvevoMezok) {
-                myTrack[c.i][c.j] = 1;
-            }
-        }
-
-
-        /*
-        //randomlep
-        if (random.nextInt(100) < 3) {
-            lastPosition = toCell(state);
-            return RaceTrackGame.DIRECTIONS[random.nextInt(RaceTrackGame.DIRECTIONS.length)];
-        }*/
-
-        if (findRoute){
+        if (findRoute) {
 
             //region mapcopy
             PositionWithParent[][] findPath = new PositionWithParent[myTrack.length][myTrack[0].length];
@@ -276,22 +201,6 @@ public class SamplePlayer extends RaceTrackPlayer {
             }
             //endregion
 
-            /*
-            //region kozeli lepes
-            for (int i = 0; i < neighbors.length; i++) {
-                int newRow = this.state.i + neighbors[i][0];
-                int newCol = this.state.j + neighbors[i][1];
-                try {
-                    if (findPath[newRow][newCol].value == -2 || findPath[newRow][newCol].value == -3) {
-                        return RaceTrackGame.DIRECTIONS[i + 1];
-                    }
-                } catch (Exception ignored) {
-                }
-            }
-            //endregion
-            */
-
-
 
             //region middle line generate
 
@@ -300,6 +209,7 @@ public class SamplePlayer extends RaceTrackPlayer {
             };
 
 
+            //copy
             PositionWithParent[][] findMiddleLine = new PositionWithParent[myTrack.length][myTrack[0].length];
             for (int i = 0; i < myTrack.length; i++) {
                 for (int j = 0; j < myTrack[i].length; j++) {
@@ -308,9 +218,9 @@ public class SamplePlayer extends RaceTrackPlayer {
                     } else if (myTrack[i][j] == 2) {
                         findMiddleLine[i][j] = new PositionWithParent(-1, i, j);
                     } else if (myTrack[i][j] == 5) {
-                        if (i<2){
+                        if (i < 2) {
                             findMiddleLine[i][j] = new PositionWithParent(-2, i, j);
-                        }else {
+                        } else {
                             findMiddleLine[i][j] = new PositionWithParent(0, i, j);
                         }
                     } else if (myTrack[i][j] == 17) {
@@ -370,6 +280,7 @@ public class SamplePlayer extends RaceTrackPlayer {
                     }
                 }
             }
+            //PrintPathMapWOWalls(findMiddleLine);
 
 
             for (int i = 0; i < findMiddleLine.length; i++) {
@@ -385,7 +296,7 @@ public class SamplePlayer extends RaceTrackPlayer {
             }
             for (int i = 0; i < findMiddleLine.length; i++) {
                 for (int j = 0; j < findMiddleLine[0].length; j++) {
-                    if (findPath[i][j].value == -2 && i<2) findMiddleLine[i][j].value = -2;
+                    if (findPath[i][j].value == -2 && i < 2) findMiddleLine[i][j].value = -2;
                     if (findPath[i][j].value == -3) {
                         for (int[] neighbor : neighbors) {
                             int newRow = i + neighbor[0];
@@ -405,6 +316,7 @@ public class SamplePlayer extends RaceTrackPlayer {
             }
 
             //||(i==state.i&&state.j==j)
+            //coinok korul kitakarit
             for (int[] neighbor : TRDLneighbors) {
                 int newRow = state.i + neighbor[0];
                 int newCol = state.j + neighbor[1];
@@ -427,76 +339,96 @@ public class SamplePlayer extends RaceTrackPlayer {
 
             //PrintPathMap(findPath);
 
-            PositionWithParent kovetkezoCel = new PositionWithParent(0, 0, 0);
+            ArrayList<PositionWithParent[][]> stepPaths = new ArrayList<>();
+
+            for (int i = 1; i < destinationList.size(); i++) {
+                PositionWithParent[][] path = FindPathBetweenTwoPoint(findPath, destinationList.get(i - 1), destinationList.get(i));
+                PositionWithParent[][] pathCopy = copyPath(path);
+                stepPaths.add(pathCopy);
+
+                //PrintPathMapWOWalls(stepPaths.get(0));
+                /*System.out.println(i+". ut");
+                for (int j = 0; j < pathCopy.length; j++) {
+                    for (int k = 0; k < pathCopy[0].length; k++) {
+                        switch (pathCopy[j][k].value) {
+                            case 0 -> System.out.print(" ");
+                            case -1 -> System.out.print(" ");
+                            default -> System.out.print(pathCopy[j][k].value + "");
+                        }
+                    }
+                    System.out.println();
+                }
+
+                 */
+            }
 
 
-            int c = 1;
-            outerLoop:
-            for (c = 1; c < 1000; c++) {
-                for (int i = 0; i < findPath.length; i++) {
-                    for (int j = 0; j < findPath[0].length; j++) {
-                        if (findPath[i][j].value == c) {
-                            for (int[] neighbor : neighbors) {
-                                int newRow = i + neighbor[0];
-                                int newCol = j + neighbor[1];
-                                try {
-                                    if ((findPath[newRow][newCol].value == 0 || findPath[newRow][newCol].value > c + 1)
-                                            || (findPath[newRow][newCol].value == -3 || findPath[newRow][newCol].value == -2)) {
-                                        findPath[newRow][newCol].parent_value = findPath[i][j].value;
-                                        findPath[newRow][newCol].parent_i = findPath[i][j].i;
-                                        findPath[newRow][newCol].parent_j = findPath[i][j].j;
-                                    }
-
-                                    if (findPath[newRow][newCol].value == 0 || findPath[newRow][newCol].value > c + 1)
-                                        findPath[newRow][newCol].value = c + 1;
-                                    else if (findPath[newRow][newCol].value == -2
-                                        //|| findPath[newRow][newCol].value == -3
-                                    ) {
-                                        kovetkezoCel = findPath[newRow][newCol];
-                                        break outerLoop;
-                                    }
-                                } catch (Exception ignored) {
-                                }
 
 
-                            }
+            for (int i = 0; i < stepPaths.size(); i++) {
+                ArrayList<PositionWithParent> routeCellsList = new ArrayList<>();
+                PositionWithParent currentRouteCell = stepPaths.get(i)[destinationList.get(i+1).i][destinationList.get(i+1).j];
+                //PrintPathMapWOWalls(stepPaths.get(i));
+                while (currentRouteCell.parent_value!=-1){
+                    routeCellsList.add(currentRouteCell);
+                    currentRouteCell=stepPaths.get(i)[currentRouteCell.parent_i][currentRouteCell.parent_j];
+                }
+                if (i == 0) routeCellsList.add(stepPaths.get(0)[destinationList.get(0).i][destinationList.get(0).j]);
+                Collections.reverse(routeCellsList);
+                combinedRouteCellsList.addAll(routeCellsList);
+            }
+
+
+
+
+            /*PositionWithParent currentRouteCell = stepPaths.get(0)[destinationList.get(1).i][destinationList.get(1).j];
+            while (currentRouteCell.parent_value!=-1){
+                routeCellsList.add(currentRouteCell);
+                currentRouteCell=stepPaths.get(0)[currentRouteCell.parent_i][currentRouteCell.parent_j];
+            }
+            Collections.reverse(routeCellsList);
+            combinedRouteCellsList.addAll(routeCellsList);
+
+            routeCellsList = new ArrayList<>();
+            currentRouteCell = stepPaths.get(1)[destinationList.get(2).i][destinationList.get(2).j];
+            while (currentRouteCell.parent_value!=-1){
+                routeCellsList.add(currentRouteCell);
+                currentRouteCell=stepPaths.get(1)[currentRouteCell.parent_i][currentRouteCell.parent_j];
+            }
+            Collections.reverse(routeCellsList);
+            combinedRouteCellsList.addAll(routeCellsList);*/
+
+            //System.out.println("XD");
+
+
+            /*PositionWithParent[][] mergedPath = new PositionWithParent[myTrack.length][myTrack[0].length];
+
+            for (int i = 0; i < mergedPath.length; i++) {
+                for (int j = 0; j < mergedPath[i].length; j++) {
+                    mergedPath[i][j]=new PositionWithParent(0,i,j);
+                }
+            }
+
+            for (PositionWithParent[][] stepPath: stepPaths) {
+                //System.out.println("==============================================================================================");PrintPathMapWOWalls(stepPath);System.out.println("============");
+                for (int i = 0; i < stepPath.length; i++) {
+                    for (int j = 0; j < stepPath[i].length; j++) {
+                        if (stepPath[i][j].value==1){
+                            mergedPath[i][j].value+=1;
                         }
                     }
                 }
+                //PrintPathMapWOWalls(mergedPath);System.out.println("==============================================================================================");
             }
+            PrintPathMap(mergedPath);
+            */
 
-            for (int i = 0; i < findPath.length; i++) {
-                for (int j = 0; j < findPath[0].length; j++) {
-                    if (findPath[i][j].value == c + 1) {
-                        findPath[i][j].value = 0;
-                    }
-                }
-            }
-
-
-            for (int x = 0; x < 1000; x++) {
-                PositionWithParent currentCell = findPath[kovetkezoCel.parent_i][kovetkezoCel.parent_j];
-                for (int i = 0; i < findPath.length; i++) {
-                    for (int j = 0; j < findPath[0].length; j++) {
-                        if (findPath[i][j].value == currentCell.value) {
-                            if (!(i == currentCell.i && j == currentCell.j)) {
-                                findPath[i][j].value = 0;
-                            }
-                        }
-                    }
-                }
-                kovetkezoCel = currentCell;
-                if (kovetkezoCel.value == 2) {
-                    break;
-                }
-            }
-            //PrintPathMap(findPath);
 
             //endregion
 
 
             //region vector fitting
-
+            /*
 
             //region map copy
 
@@ -523,42 +455,40 @@ public class SamplePlayer extends RaceTrackPlayer {
                     {-1, 0}, {1, 0}
             };
             int[][] horiCrossNeighbors = {
-                    {0, -1},{0, 1}
+                    {0, -1}, {0, 1}
             };
 
 
-            for (int i = 1; i < vectorParsing.length-1; i++) {
-                for (int j = 1; j < vectorParsing[0].length-1; j++) {
-                    int vertcrossCount=0;
-                    for (int[] neighbor:vertCrossNeighbors) {
+            for (int i = 1; i < vectorParsing.length - 1; i++) {
+                for (int j = 1; j < vectorParsing[0].length - 1; j++) {
+                    int vertcrossCount = 0;
+                    for (int[] neighbor : vertCrossNeighbors) {
                         int newRow = i + neighbor[0];
                         int newCol = j + neighbor[1];
-                        if (vectorParsing[newRow][newCol].value==1)vertcrossCount++;
+                        if (vectorParsing[newRow][newCol].value == 1) vertcrossCount++;
                     }
-                    if (vertcrossCount==2){
-                        vectorParsing[i][j]=new VectorFittingData(1, i, j);
-                        vectorParsing[i+horiCrossNeighbors[0][0]][j+horiCrossNeighbors[0][1]]=new VectorFittingData(-1, i, j);
-                        vectorParsing[i+horiCrossNeighbors[1][0]][j+horiCrossNeighbors[1][1]]=new VectorFittingData(-1, i, j);
+                    if (vertcrossCount == 2) {
+                        vectorParsing[i][j] = new VectorFittingData(1, i, j);
+                        vectorParsing[i + horiCrossNeighbors[0][0]][j + horiCrossNeighbors[0][1]] = new VectorFittingData(-1, i, j);
+                        vectorParsing[i + horiCrossNeighbors[1][0]][j + horiCrossNeighbors[1][1]] = new VectorFittingData(-1, i, j);
                     }
 
-                    int horicrossCount=0;
-                    for (int[] neighbor:horiCrossNeighbors) {
+                    int horicrossCount = 0;
+                    for (int[] neighbor : horiCrossNeighbors) {
                         int newRow = i + neighbor[0];
                         int newCol = j + neighbor[1];
-                        if (vectorParsing[newRow][newCol].value==1)horicrossCount++;
+                        if (vectorParsing[newRow][newCol].value == 1) horicrossCount++;
                     }
-                    if (horicrossCount==2){
-                        vectorParsing[i][j]=new VectorFittingData(1, i, j);
-                        vectorParsing[i+vertCrossNeighbors[0][0]][j+vertCrossNeighbors[0][1]]=new VectorFittingData(-1, i, j);
-                        vectorParsing[i+vertCrossNeighbors[1][0]][j+vertCrossNeighbors[1][1]]=new VectorFittingData(-1, i, j);
+                    if (horicrossCount == 2) {
+                        vectorParsing[i][j] = new VectorFittingData(1, i, j);
+                        vectorParsing[i + vertCrossNeighbors[0][0]][j + vertCrossNeighbors[0][1]] = new VectorFittingData(-1, i, j);
+                        vectorParsing[i + vertCrossNeighbors[1][0]][j + vertCrossNeighbors[1][1]] = new VectorFittingData(-1, i, j);
                     }
 
 
                 }
             }
             //endregion
-
-
 
 
             Comparator<int[]> customComparator = new Comparator<int[]>() {
@@ -638,7 +568,8 @@ public class SamplePlayer extends RaceTrackPlayer {
                             validCells.add(new int[]{i, newRow, newCol, (int) (RaceTrackGame.euclideanDistance(currentCell, newCell) * 10)});
                             lepesDarab++;
                         }
-                    } catch (Exception ignored){}
+                    } catch (Exception ignored) {
+                    }
 
                 }
 
@@ -651,11 +582,7 @@ public class SamplePlayer extends RaceTrackPlayer {
                     AddNewCell(moveList, validCells, vectorParsing, touchedCellsValidSteps, lepesDarab, touchedCells, touchedCellsSpeedVectors, speedVector, vectorNeighbors, touchedCellsValidStepCells);
 
                 } else {
-                /*debug("Nem talalt");
-                PrintVectorMap(vectorParsing);
-                for (int i = 0; i < touchedCells.size(); i++) {
-                    System.out.println("Aktualis mezo: " + touchedCells.get(i) + " | Speed vector: " + touchedCellsSpeedVectors.get(i)[0] + ":" + touchedCellsSpeedVectors.get(i)[1] + " | Valid steps: " + touchedCellsValidSteps.get(i));
-                }*/
+
 
                     //region delete old
                     DeleteLastCell(vectorParsing, touchedCells, touchedCellsSpeedVectors, touchedCellsValidSteps, moveList, touchedCellsValidStepCells);
@@ -665,18 +592,167 @@ public class SamplePlayer extends RaceTrackPlayer {
                     //break vectorFittingWhile;
                 }
             }
+
+             */
             //endregion
 
-        }
-        else {
+            //region lepeskinyeres
+
+            //endregion
+
+            int[][] vectorNeighbors = {
+                    {0, 0}, {0, -1}, {-1, -1}, {-1, 0},
+                    {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}
+            };
+
+            int[] testSpeedVector = new int[]{0,0};
+            for (int i = 0; i < combinedRouteCellsList.size()-1; i++) {
+                int[] neededSpeedVector = new int[2];
+                PositionWithParent cell = combinedRouteCellsList.get(i);
+                PositionWithParent nextCell = combinedRouteCellsList.get(i+1);
+                neededSpeedVector[0]=nextCell.i-cell.i;
+                neededSpeedVector[1]=nextCell.j-cell.j;
+
+                int[] tempSpeedVector = new int[2];
+                tempSpeedVector[0]=testSpeedVector[0]-neededSpeedVector[0];
+                tempSpeedVector[1]=testSpeedVector[1]-neededSpeedVector[1];
+                for (int j = 0; j < vectorNeighbors.length; j++) {
+                    int[] neighbor = vectorNeighbors[j];
+                    if (neighbor[0] == tempSpeedVector[0]*-1 && neighbor[1] == tempSpeedVector[1]*-1) {
+                        moveList.add(j);
+                        //System.out.println(toString(RaceTrackGame.DIRECTIONS[j]));
+                        break;
+                    }
+                }
+                testSpeedVector[0]-=tempSpeedVector[0];
+                testSpeedVector[1]-=tempSpeedVector[1];
+
+
+
+
+
+
+            }
+
+            //delete Later
+            findRoute = false;
+
+
+        } else {
             lastPosition = toCell(state);
-            moveListCounter++;
-            return RaceTrackGame.DIRECTIONS[moveList.get(moveListCounter)];
+            try {
+                moveListCounter++;
+                return RaceTrackGame.DIRECTIONS[moveList.get(moveListCounter)];
+            } catch (Exception error) {
+                return RaceTrackGame.DIRECTIONS[random.nextInt(RaceTrackGame.DIRECTIONS.length)];
+            }
+
+        }
+
+        return RaceTrackGame.DIRECTIONS[0];
+
+
+    }
+
+    private PositionWithParent[][] FindPathBetweenTwoPoint(PositionWithParent[][] findPath, Cell from, Cell to) {
+
+        PositionWithParent[][] baseMap = new PositionWithParent[findPath.length][findPath[0].length];
+
+        for (int i = 0; i < findPath.length; i++) {
+            for (int j = 0; j < findPath[i].length; j++) {
+                if (i < 2) {
+                    baseMap[i][j] = new PositionWithParent(-1, i, j);
+                } else {
+                    if (findPath[i][j].value == 0 || findPath[i][j].value == -1) {
+                        baseMap[i][j] = findPath[i][j];
+                    } else {
+                        baseMap[i][j] = new PositionWithParent(0, i, j);
+                    }
+                }
+
+            }
+        }
+        baseMap[from.i][from.j].value = 1;
+
+        for (int[] neighbor : neighbors) {
+            int newRow = from.i + neighbor[0];
+            int newCol = from.j + neighbor[1];
+            try {
+                if (newRow == to.i && newCol == to.j) {
+                    baseMap[newRow][newCol].parent_value = 1;
+                    baseMap[newRow][newCol].parent_i = from.i;
+                    baseMap[newRow][newCol].parent_j = from.j;
+                    baseMap[newRow][newCol].value = 1;
+                    return baseMap;
+                }
+            } catch (Exception ignored) {
+            }
         }
 
 
-        lastPosition = toCell(state);
-        return RaceTrackGame.DIRECTIONS[0];
+        PositionWithParent kovetkezoCel = new PositionWithParent(0, 0, 0);
+        int c;
+        outerLoop:
+        for (c = 1; c < 1000; c++) {
+            for (int i = 0; i < baseMap.length; i++) {
+                for (int j = 0; j < baseMap[0].length; j++) {
+                    if (baseMap[i][j].value == c) {
+                        for (int[] neighbor : neighbors) {
+                            int newRow = i + neighbor[0];
+                            int newCol = j + neighbor[1];
+                            try {
+                                if (baseMap[newRow][newCol].value == 0) {
+                                    baseMap[newRow][newCol].parent_value = baseMap[i][j].value;
+                                    baseMap[newRow][newCol].parent_i = baseMap[i][j].i;
+                                    baseMap[newRow][newCol].parent_j = baseMap[i][j].j;
+                                    baseMap[newRow][newCol].value = c + 1;
+                                }
+                                if (newRow == to.i && newCol == to.j) {
+
+                                    kovetkezoCel = baseMap[newRow][newCol];
+                                    break outerLoop;
+                                }
+                            } catch (Exception ignored) {
+                            }
+
+                        }
+                    }
+                }
+            }
+
+        }
+
+
+        for (int x = 0; x < 1000; x++) {
+            PositionWithParent currentCell = baseMap[kovetkezoCel.i][kovetkezoCel.j];
+            for (int i = 0; i < baseMap.length; i++) {
+                for (int j = 0; j < baseMap[0].length; j++) {
+                    if (baseMap[i][j].value == currentCell.value) {
+                        if (!(i == currentCell.i && j == currentCell.j)) {
+                            baseMap[i][j].value = 0;
+                        }
+                    }
+                }
+            }
+            if (kovetkezoCel.value == 2) {
+                break;
+            }
+            kovetkezoCel = baseMap[kovetkezoCel.parent_i][kovetkezoCel.parent_j];
+        }
+
+
+        for (int i = 0; i < baseMap.length; i++) {
+            for (int j = 0; j < baseMap[i].length; j++) {
+                if (baseMap[i][j].value > 1){
+                    baseMap[i][j].value = 1;
+                }
+            }
+        }
+        //PrintPathMapWOWalls(baseMap);
+
+
+        return baseMap;
+
     }
 
     private static void DeleteLastCell(VectorFittingData[][] vectorParsing, ArrayList<Cell> touchedCells, ArrayList<int[]> touchedCellsSpeedVectors, ArrayList<Integer> touchedCellsValidSteps, ArrayList<Integer> moveList, ArrayList<ArrayList<int[]>> touchedCellsValidStepCells) {
@@ -690,6 +766,17 @@ public class SamplePlayer extends RaceTrackPlayer {
         touchedCellsValidSteps.remove(touchedCellsValidSteps.size() - 1);
         moveList.remove(moveList.size() - 1);
         touchedCellsValidStepCells.remove(touchedCellsValidStepCells.size() - 1);
+    }
+
+
+    public static PositionWithParent[][] copyPath(PositionWithParent[][] map) {
+        PositionWithParent[][] copy = new PositionWithParent[map.length][map[0].length];
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[0].length; j++) {
+                copy[i][j] = new PositionWithParent(map[i][j]);
+            }
+        }
+        return copy;
     }
 
     private static void AddNewCell(ArrayList<Integer> moveList, ArrayList<int[]> validCells, VectorFittingData[][] vectorParsing, ArrayList<Integer> touchedCellsValidSteps, int lepesDarab, ArrayList<Cell> touchedCells, ArrayList<int[]> touchedCellsSpeedVectors, int[] speedVector, int[][] vectorNeighbors, ArrayList<ArrayList<int[]>> touchedCellsValidStepCells) {
@@ -728,7 +815,6 @@ public class SamplePlayer extends RaceTrackPlayer {
         }
     }
 
-
     private void PrintPathMap(PositionWithParent[][] findPath) {
         for (int i = 0; i < findPath.length; i++) {
             for (int j = 0; j < findPath[0].length; j++) {
@@ -737,7 +823,7 @@ public class SamplePlayer extends RaceTrackPlayer {
                     case -1 -> System.out.print("X");
                     case -2 -> System.out.print("F");
                     case -3 -> System.out.print("C");
-                    case 1 -> System.out.print("P");
+                    case 1 -> System.out.print("1");
                     default -> System.out.print(findPath[i][j].value % 10 + "");
                 }
             }
@@ -767,45 +853,6 @@ public class SamplePlayer extends RaceTrackPlayer {
         System.out.println();
         System.out.println("DEBUG " + a + "!");
         System.out.println();
-    }
-
-    void createCircle(int[][] array, int centerX, int centerY, int radius) {
-
-        int[][] korbe = {
-                {0, -1}, {-1, -1}, {-1, 0}, {-1, 1},
-                {0, 1}, {1, 1}, {1, 0}, {1, -1}
-        };
-
-        array[centerX][centerY] = -5;
-
-
-        for (int x = 0; x < radius; x++) {
-            for (int i = 0; i < array.length; i++) {
-                for (int j = 0; j < array[0].length; j++) {
-                    if (array[i][j] == (array[centerX][centerY] - x)) {
-                        for (int[] neighbor : korbe) {
-                            int newRow = i + neighbor[0];
-                            int newCol = j + neighbor[1];
-                            try {
-                                if (array[newRow][newCol] == 0 || array[newRow][newCol] == -4) {
-                                    array[newRow][newCol] = (array[centerX][centerY] - 1 - x);
-                                }
-                            } catch (Exception ignored) {
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        for (int i = 0; i < array.length; i++) {
-            for (int j = 0; j < array[i].length; j++) {
-                if (array[i][j] < -4) array[i][j] = -4;
-            }
-        }
-
-        array[centerX][centerY] = -3;
-
     }
 
     public Cell toCell(PlayerState ps) {
@@ -839,7 +886,7 @@ public class SamplePlayer extends RaceTrackPlayer {
         return totalDistance;
     }
 
-    private void GetAllDistances(int[][] findPath,int actualNumber) {
+    private void GetAllDistances(int[][] findPath, int actualNumber) {
 
         int[][] distanceMap = new int[myTrack.length][myTrack[0].length];
         for (int i = 0; i < findPath.length; i++) {
@@ -848,9 +895,9 @@ public class SamplePlayer extends RaceTrackPlayer {
             }
         }
 
-        ArrayList<Integer> erintettCelok=new ArrayList<>();
+        ArrayList<Integer> erintettCelok = new ArrayList<>();
         erintettCelok.add(actualNumber);
-        distanceMatrix[abs(actualNumber)-1][abs(actualNumber)-1]=0;
+        distanceMatrix[abs(actualNumber) - 1][abs(actualNumber) - 1] = 0;
 
         int c = 1;
         outerLoop:
@@ -859,29 +906,17 @@ public class SamplePlayer extends RaceTrackPlayer {
 
             for (int i = 0; i < distanceMap.length; i++) {
                 for (int j = 0; j < distanceMap[0].length; j++) {
-                    if (distanceMap[i][j] == actualNumber || (distanceMap[i][j]==c-1&&distanceMap[i][j] != actualNumber&&distanceMap[i][j] !=0)) {
+                    if (distanceMap[i][j] == actualNumber || (distanceMap[i][j] == c - 1 && distanceMap[i][j] != actualNumber && distanceMap[i][j] != 0)) {
                         for (int[] neighbor : neighbors) {
                             int newRow = i + neighbor[0];
                             int newCol = j + neighbor[1];
                             try {
                                 if (distanceMap[newRow][newCol] == 0)
                                     distanceMap[newRow][newCol] = c;
-                                else if (distanceMap[newRow][newCol] <0 && distanceMap[newRow][newCol]!=-100 && !erintettCelok.contains(distanceMap[newRow][newCol])) {
+                                else if (distanceMap[newRow][newCol] < 0 && distanceMap[newRow][newCol] != -100 && !erintettCelok.contains(distanceMap[newRow][newCol])) {
                                     erintettCelok.add(distanceMap[newRow][newCol]);
-                                    distanceMatrix[abs(actualNumber)-1][abs(distanceMap[newRow][newCol])-1]=c;
-                                    /*
-                                    //kiir
-                                    for (int[] ints : distanceMap) {
-                                        for (int anInt : ints) {
-                                            switch (anInt) {
-                                                case 0 -> System.out.print(" ");
-                                                case -100 -> System.out.print(" ");
-                                                default -> System.out.print(abs(anInt % 10) + "");
-                                            }
-                                        }
-                                        System.out.println();
-                                    }
-                                    */
+                                    distanceMatrix[abs(actualNumber) - 1][abs(distanceMap[newRow][newCol]) - 1] = c;
+
                                 }
                             } catch (Exception ignored) {
                             }
@@ -892,6 +927,44 @@ public class SamplePlayer extends RaceTrackPlayer {
                 }
             }
         }
+    }
+
+    /**************** PRINT / DEBUD ******************/
+    static String toString(Direction dir) {
+        if(dir == null){
+            return " ";
+        }
+        if (dir.same(new Direction(1, 0))) {
+            return "↓";
+        } else if (dir.same(new Direction(1, 1))) {
+            return "↘";
+        } else if (dir.same(new Direction(0, 1))) {
+            return "→";
+        } else if (dir.same(new Direction(-1, 1))) {
+            return "↗";
+        } else if (dir.same(new Direction(-1, 0))) {
+            return "↑";
+        } else if (dir.same(new Direction(-1, -1))) {
+            return "↖";
+        } else if (dir.same(new Direction(0, -1))) {
+            return "←";
+        } else if (dir.same(new Direction(1, -1))) {
+            return "↙";
+        }
+        return " ";
+    }
+    static String toString(int dir) {
+        switch (dir) {
+            case 0 -> { return "↓"; }
+            case 1 -> { return "↘"; }
+            case 2 -> { return "→"; }
+            case 3 -> { return "↗"; }
+            case 4 -> { return "↑"; }
+            case 5 -> { return "↖"; }
+            case 6 -> { return "←"; }
+            case 7 -> { return "↙"; }
+        }
+        return " ";
     }
 
 }
