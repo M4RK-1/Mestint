@@ -387,44 +387,60 @@ public class Agent extends RaceTrackPlayer {
                     {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}
             };
 
-            int[] testSpeedVector = new int[]{0, 0};
+            int[] currentSpeedVector = new int[]{0, 0};
             for (int i = 0; i < combinedRouteCellsList.size() - 1; i++) {
-                int[] neededSpeedVector = new int[2];
-                PositionWithParent cell = combinedRouteCellsList.get(i);
-                PositionWithParent nextCell = combinedRouteCellsList.get(i + 1);
-                neededSpeedVector[0] = nextCell.i - cell.i;
-                neededSpeedVector[1] = nextCell.j - cell.j;
+                ArrayList<int[]> neededSpeedVectors = new ArrayList<>();
 
-                int[] tempSpeedVector = new int[2];
-                tempSpeedVector[0] = testSpeedVector[0] - neededSpeedVector[0];
-                tempSpeedVector[1] = testSpeedVector[1] - neededSpeedVector[1];
-                try {
-                    for (int j = 0; j < vectorNeighbors.length + 1; j++) {
-                        int[] neighbor = vectorNeighbors[j];
-                        if (neighbor[0] == tempSpeedVector[0] * -1 && neighbor[1] == tempSpeedVector[1] * -1) {
-                            moveList.add(j);
-                            //System.out.println(toString(RaceTrackGame.DIRECTIONS[j]));
-                            break;
-                        }
-                    }
-                    testSpeedVector[0] -= tempSpeedVector[0];
-                    testSpeedVector[1] -= tempSpeedVector[1];
-                } catch (Exception ignored) {
+                PositionWithParent currentCell = combinedRouteCellsList.get(i);
 
+                int maxDistance = abs(Math.max(currentSpeedVector[0],currentSpeedVector[1]));
 
-                    int[] newNeededVector = new int[]{testSpeedVector[0], testSpeedVector[1]};
-                    for (int j = 0; j < vectorNeighbors.length + 1; j++) {
-                        int[] neighbor = vectorNeighbors[j];
-                        if (neighbor[0] == newNeededVector[0] * -1 && neighbor[1] == newNeededVector[1] * -1) {
-                            moveList.add(j);
-                            break;
-                        }
-                    }
-                    testSpeedVector[0] -= newNeededVector[0];
-                    testSpeedVector[1] -= newNeededVector[1];
-                    i--;
-
+                //lehetseges celok kiszamitasa
+                for (int j = 1; j < maxDistance+2; j++) {
+                    try {
+                        PositionWithParent nextCell = combinedRouteCellsList.get(i + j);
+                        int[] tempSpeedVector = new int[2];
+                        tempSpeedVector[0] = nextCell.i - currentCell.i;
+                        tempSpeedVector[1] = nextCell.j - currentCell.j;
+                        neededSpeedVectors.add(tempSpeedVector);
+                    }catch (Exception ignored){}
                 }
+
+
+                outerFor:
+                for (int c = 0; c < neededSpeedVectors.size(); c++) {
+                    int[] tempSpeedVector = new int[2];
+                    tempSpeedVector[0] = currentSpeedVector[0] - neededSpeedVectors.get(c)[0];
+                    tempSpeedVector[1] = currentSpeedVector[1] - neededSpeedVectors.get(c)[1];
+                    try {
+                        for (int j = 0; j < vectorNeighbors.length + 1; j++) {
+                            int[] neighbor = vectorNeighbors[j];
+                            if (neighbor[0] == tempSpeedVector[0] * -1 && neighbor[1] == tempSpeedVector[1] * -1) {
+                                moveList.add(j);
+                                //System.out.println(toString(RaceTrackGame.DIRECTIONS[j]));
+                                break;
+                            }
+                        }
+                        currentSpeedVector[0] -= tempSpeedVector[0];
+                        currentSpeedVector[1] -= tempSpeedVector[1];
+                        break outerFor;
+                    } catch (ArrayIndexOutOfBoundsException ignored) {
+
+                        for (int j = 0; j < vectorNeighbors.length + 1; j++) {
+                            int[] neighbor = vectorNeighbors[j];
+                            if (neighbor[0] == currentSpeedVector[0] * -1 && neighbor[1] == currentSpeedVector[1] * -1) {
+                                moveList.add(j);
+                                break;
+                            }
+                        }
+                        currentSpeedVector[0] -= currentSpeedVector[0];
+                        currentSpeedVector[1] -= currentSpeedVector[1];
+                        i--;
+                        break outerFor;
+
+                    }
+                }
+
 
 
             }
