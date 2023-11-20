@@ -82,6 +82,79 @@ public class Agent extends RaceTrackPlayer {
     public Agent(PlayerState state, Random random, int[][] track, Coin[] coins, int color) {
         super(state, random, track, coins, color);
 
+
+        ArrayList<ArrayList<Integer>> tmpSwitchPlace = new ArrayList<>();
+        tmpSwitchPlace.add(new ArrayList<>(){});
+        tmpSwitchPlace.add(new ArrayList<>(){{add(0);}});
+        tmpSwitchPlace.add(new ArrayList<>(){{add(0);add(0);}});
+        tmpSwitchPlace.add(new ArrayList<>(){{add(1);add(2);add(1);}});
+
+
+        for (int i = 5; i < 136; i++) {
+
+            ArrayList<Integer> tempList = new ArrayList<>();
+
+            int actualNum = -1;
+            int numCounter = 0;
+            boolean nemTalat = true;
+            ArrayList<Integer> lastList = tmpSwitchPlace.get(tmpSwitchPlace.size()-1);
+            int max = 0;
+
+            for (int num : lastList) if (num > max) max = num;
+
+
+            for (int j = lastList.size() - 1; j >= 0; j--) {
+                if (numCounter==2 && actualNum!=max){
+                    for (int k = 0; k < j+1; k++) {
+                        tempList.add(lastList.get(k));
+                    }
+                    tempList.add(actualNum+1);
+                    for (int k = j+2; k < lastList.size(); k++) {
+                        tempList.add(lastList.get(k));
+                    }
+                    nemTalat=false;
+
+
+                }else if (numCounter==3&&actualNum==max){
+                    for (int k = 0; k < j+2; k++) {
+                        tempList.add(lastList.get(k));
+                    }
+                    tempList.add(actualNum+1);
+                    for (int k = j+3; k < lastList.size(); k++) {
+                        tempList.add(lastList.get(k));
+                    }
+                    nemTalat=false;
+
+
+                }
+
+                if (lastList.get(j)==actualNum){
+                    numCounter++;
+                }else {
+                    actualNum=lastList.get(j);
+                    numCounter = 1;
+                }
+
+            }
+            if (nemTalat){
+                tempList.addAll(lastList);
+                tempList.add(1);
+            }
+
+            tmpSwitchPlace.add(tempList);
+        }
+
+
+        for (int i = 0; i < tmpSwitchPlace.size(); i++) {
+            ArrayList<Integer> differencesList = new ArrayList<>();
+            ArrayList <Integer> currSwitchPlace = tmpSwitchPlace.get(i);
+            for (int j = 0; j < currSwitchPlace.size()-1; j++) {
+                int diff = currSwitchPlace.get(j + 1) - currSwitchPlace.get(j);
+                differencesList.add(diff);
+            }
+            switchPlace.add(differencesList);
+        }
+
         int[][] findPath = new int[myTrack.length][myTrack[0].length];
         for (int i = 0; i < myTrack.length; i++) {
             for (int j = 0; j < myTrack[i].length; j++) {
@@ -162,6 +235,8 @@ public class Agent extends RaceTrackPlayer {
 
     public ArrayList<Integer> moveList = new ArrayList<>();
     public int moveListCounter = -1;
+
+    ArrayList<ArrayList<Integer>> switchPlace = new ArrayList<>();
 
 
     public game.racetrack.utils.Cell lastPosition = toCell(state);
@@ -284,11 +359,26 @@ public class Agent extends RaceTrackPlayer {
 
 
 
+            /*
+            //Restrict the map by one cell
             for (int i = 0; i < findMiddleLine.length; i++) {
                 for (int j = 0; j < findMiddleLine[0].length; j++) {
                     if (findMiddleLine[i][j].value == 1) {
                         findMiddleLine[i][j].value = -1;
                     } else if (findMiddleLine[i][j].value >= 2) {
+                        findMiddleLine[i][j].value = 0;
+                    } else {
+                        findMiddleLine[i][j].value = -1;
+                    }
+                }
+            }
+             */
+
+            for (int i = 0; i < findMiddleLine.length; i++) {
+                for (int j = 0; j < findMiddleLine[0].length; j++) {
+                    if (findMiddleLine[i][j].value == 0) {
+                        findMiddleLine[i][j].value = -1;
+                    } else if (findMiddleLine[i][j].value >= 1) {
                         findMiddleLine[i][j].value = 0;
                     } else {
                         findMiddleLine[i][j].value = -1;
@@ -387,7 +477,9 @@ public class Agent extends RaceTrackPlayer {
                     {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}
             };
 
+            ArrayList<int[]> speedVectors = new ArrayList<>();
             int[] currentSpeedVector = new int[]{0, 0};
+            speedVectors.add(new int[]{currentSpeedVector[0],currentSpeedVector[1]});
             for (int i = 0; i < combinedRouteCellsList.size() - 1; i++) {
                 ArrayList<int[]> neededSpeedVectors = new ArrayList<>();
 
@@ -412,6 +504,7 @@ public class Agent extends RaceTrackPlayer {
                     int[] tempSpeedVector = new int[2];
                     tempSpeedVector[0] = currentSpeedVector[0] - neededSpeedVectors.get(c)[0];
                     tempSpeedVector[1] = currentSpeedVector[1] - neededSpeedVectors.get(c)[1];
+
                     try {
                         for (int j = 0; j < vectorNeighbors.length + 1; j++) {
                             int[] neighbor = vectorNeighbors[j];
@@ -423,6 +516,7 @@ public class Agent extends RaceTrackPlayer {
                         }
                         currentSpeedVector[0] -= tempSpeedVector[0];
                         currentSpeedVector[1] -= tempSpeedVector[1];
+                        speedVectors.add(new int[]{currentSpeedVector[0],currentSpeedVector[1]});
                         break outerFor;
                     } catch (ArrayIndexOutOfBoundsException ignored) {
 
@@ -435,15 +529,67 @@ public class Agent extends RaceTrackPlayer {
                         }
                         currentSpeedVector[0] -= currentSpeedVector[0];
                         currentSpeedVector[1] -= currentSpeedVector[1];
+                        speedVectors.add(new int[]{currentSpeedVector[0],currentSpeedVector[1]});
                         i--;
                         break outerFor;
 
                     }
+
+
                 }
 
 
 
             }
+            //endregion
+
+            //region step more
+
+            int numCounter = 0;
+
+
+            int c = -1;
+            for (int i = 0; i < moveList.size(); i++) {
+                c++;
+                Integer integer = moveList.get(i);
+                if (integer == 0) {
+                    numCounter++;
+                } else if ( numCounter>2) {
+                    int startIndex = i-numCounter;
+                    int endIndex = i;
+
+                    List<Integer> cutPortion = moveList.subList(startIndex, endIndex);
+
+                    ArrayList<Integer> switchVector = new ArrayList<>();
+                    ArrayList<Integer> actualSwitchPlace = switchPlace.get(numCounter);
+
+                    int lol = DirectionToInt(new Direction(speedVectors.get(c-numCounter)[0],speedVectors.get(c-numCounter)[1]));
+
+
+                    for (int j = 0; j < actualSwitchPlace.size(); j++) {
+                        if (actualSwitchPlace.get(j)==1){
+                            switchVector.add(lol);
+                        }else if (actualSwitchPlace.get(j)==-1){
+                            switchVector.add(RevesreDirectionNum(lol));
+                        }else {
+                            switchVector.add(0);
+                        }
+                    }
+
+
+                    cutPortion.clear();
+                    cutPortion.addAll(switchVector);
+                    numCounter = 0;
+                    i=actualSwitchPlace.size()+startIndex;
+                }else {
+                    numCounter = 0;
+                }
+
+            }
+
+
+
+
             //endregion
 
             //delete Later
@@ -466,6 +612,34 @@ public class Agent extends RaceTrackPlayer {
 
     }
 
+    private int ForceBetween(int number){
+        if (number <= -1) {
+            return  -1;
+        } else if (number >= 1) {
+            return  1;
+        }
+        return 0;
+    }
+
+    private int RevesreDirectionNum(int num){
+        Direction tmpDir = IntToDirection(num);
+        Direction forditottIranyDir = new Direction(tmpDir.i*-1,tmpDir.j*-1);
+        return DirectionToInt(forditottIranyDir);
+    }
+
+    private Direction IntToDirection(int num){
+        return RaceTrackGame.DIRECTIONS[num];
+    }
+
+    private int DirectionToInt(Direction dir){
+        for (int i = 0; i < RaceTrackGame.DIRECTIONS.length; i++) {
+            Direction aktVizsgaltDirection = RaceTrackGame.DIRECTIONS[i];
+            if (aktVizsgaltDirection.i==dir.i&&aktVizsgaltDirection.j==dir.j){
+                return i;
+            }
+        }
+        return -1;
+    }
 
     private PositionWithParent[][] FindPathBetweenTwoPoint(PositionWithParent[][] findPath, Cell from, Cell to) {
 
