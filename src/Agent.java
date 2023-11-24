@@ -285,11 +285,10 @@ public class Agent extends RaceTrackPlayer {
                     }
                 }
 
-                //routeCellsList.add(startRouteCell);
-                //startRouteCell = stepPaths.get(i)[startRouteCell.parent_i][startRouteCell.parent_j];
+
             }
 
-            //if (i == 0) routeCellsList.add(stepPaths.get(0)[destinationList.get(0).i][destinationList.get(0).j]);
+
             Collections.reverse(routeCellsList);
             combinedRouteCellsList.addAll(routeCellsList);
         }
@@ -354,7 +353,6 @@ public class Agent extends RaceTrackPlayer {
             moveList.add(0);
         }
         moveList.add(4);
-        //System.out.println();
 
 
         int c = -1;
@@ -395,7 +393,7 @@ public class Agent extends RaceTrackPlayer {
             }
 
         }
-        //System.out.println();
+
         //endregion
 
     }
@@ -412,15 +410,11 @@ public class Agent extends RaceTrackPlayer {
 
     ArrayList<PositionWithParent> combinedRouteCellsList = new ArrayList<>();
 
-    public boolean findRoute = true;
 
     public ArrayList<Integer> moveList = new ArrayList<>();
     public int moveListCounter = -1;
 
     ArrayList<ArrayList<Integer>> switchPlace = new ArrayList<>();
-
-
-    public game.racetrack.utils.Cell lastPosition = toCell(state);
 
 
     int[][] neighbors = {
@@ -431,22 +425,10 @@ public class Agent extends RaceTrackPlayer {
 
     @Override
     public Direction getDirection(long remainingTime) {
-        try {
-            moveListCounter++;
-            return RaceTrackGame.DIRECTIONS[moveList.get(moveListCounter)];
-        } catch (Exception error) {
-            return RaceTrackGame.DIRECTIONS[random.nextInt(RaceTrackGame.DIRECTIONS.length)];
-        }
+        moveListCounter++;
+        return RaceTrackGame.DIRECTIONS[moveList.get(moveListCounter)];
     }
 
-    private int ForceBetween(int number) {
-        if (number <= -1) {
-            return -1;
-        } else if (number >= 1) {
-            return 1;
-        }
-        return 0;
-    }
 
     private int RevesreDirectionNum(int num) {
         Direction tmpDir = IntToDirection(num);
@@ -621,19 +603,6 @@ public class Agent extends RaceTrackPlayer {
 
     }
 
-    private static void DeleteLastCell(VectorFittingData[][] vectorParsing, ArrayList<Cell> touchedCells, ArrayList<int[]> touchedCellsSpeedVectors, ArrayList<Integer> touchedCellsValidSteps, ArrayList<Integer> moveList, ArrayList<ArrayList<int[]>> touchedCellsValidStepCells) {
-
-        vectorParsing[touchedCells.get(touchedCells.size() - 1).i]
-                [touchedCells.get(touchedCells.size() - 1).j].value = 1;
-        vectorParsing[touchedCells.get(touchedCells.size() - 1).i]
-                [touchedCells.get(touchedCells.size() - 1).j].inUse = false;
-        touchedCells.remove(touchedCells.size() - 1);
-        touchedCellsSpeedVectors.remove(touchedCellsSpeedVectors.size() - 1);
-        touchedCellsValidSteps.remove(touchedCellsValidSteps.size() - 1);
-        moveList.remove(moveList.size() - 1);
-        touchedCellsValidStepCells.remove(touchedCellsValidStepCells.size() - 1);
-    }
-
 
     public static PositionWithParent[][] copyPath(PositionWithParent[][] map) {
         PositionWithParent[][] copy = new PositionWithParent[map.length][map[0].length];
@@ -645,25 +614,6 @@ public class Agent extends RaceTrackPlayer {
         return copy;
     }
 
-    private static void AddNewCell(ArrayList<Integer> moveList, ArrayList<int[]> validCells, VectorFittingData[][] vectorParsing, ArrayList<Integer> touchedCellsValidSteps, int lepesDarab, ArrayList<Cell> touchedCells, ArrayList<int[]> touchedCellsSpeedVectors, int[] speedVector, int[][] vectorNeighbors, ArrayList<ArrayList<int[]>> touchedCellsValidStepCells) {
-        moveList.add(validCells.get(validCells.size() - 1)[0]);
-
-        vectorParsing[validCells.get(validCells.size() - 1)[1]]
-                [validCells.get(validCells.size() - 1)[2]].value = 0;
-
-        vectorParsing[validCells.get(validCells.size() - 1)[1]]
-                [validCells.get(validCells.size() - 1)[2]].inUse = true;
-
-        touchedCellsValidSteps.add(lepesDarab);
-
-        touchedCells.add(new Cell(validCells.get(validCells.size() - 1)[1],
-                validCells.get(validCells.size() - 1)[2]));
-
-        touchedCellsSpeedVectors.add(new int[]{speedVector[0] + vectorNeighbors[validCells.get(validCells.size() - 1)[0]][0],
-                speedVector[1] + vectorNeighbors[validCells.get(validCells.size() - 1)[0]][1]});
-
-        touchedCellsValidStepCells.add(validCells);
-    }
 
     private void PrintVectorMap(VectorFittingData[][] vectorParsing) {
         System.out.println("ParentValues:");
