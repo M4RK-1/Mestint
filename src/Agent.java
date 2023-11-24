@@ -1,4 +1,5 @@
 ///>.<",vizi.mark@stud.u-szeged.hu
+
 import game.racetrack.Direction;
 import game.racetrack.RaceTrackGame;
 import game.racetrack.RaceTrackPlayer;
@@ -82,61 +83,72 @@ public class Agent extends RaceTrackPlayer {
     public Agent(PlayerState state, Random random, int[][] track, Coin[] coins, int color) {
         super(state, random, track, coins, color);
 
-
+        //region speedup values calculate
         ArrayList<ArrayList<Integer>> tmpSwitchPlace = new ArrayList<>();
-        tmpSwitchPlace.add(new ArrayList<>(){});
-        tmpSwitchPlace.add(new ArrayList<>(){{add(0);}});
-        tmpSwitchPlace.add(new ArrayList<>(){{add(0);add(0);}});
-        tmpSwitchPlace.add(new ArrayList<>(){{add(1);add(2);add(1);}});
+        tmpSwitchPlace.add(new ArrayList<>() {
+        });
+        tmpSwitchPlace.add(new ArrayList<>() {{
+            add(0);
+        }});
+        tmpSwitchPlace.add(new ArrayList<>() {{
+            add(0);
+            add(0);
+        }});
+        tmpSwitchPlace.add(new ArrayList<>() {{
+            add(1);
+            add(2);
+            add(1);
+        }});
 
 
         for (int i = 5; i < 136; i++) {
+
 
             ArrayList<Integer> tempList = new ArrayList<>();
 
             int actualNum = -1;
             int numCounter = 0;
             boolean nemTalat = true;
-            ArrayList<Integer> lastList = tmpSwitchPlace.get(tmpSwitchPlace.size()-1);
+            ArrayList<Integer> lastList = tmpSwitchPlace.get(tmpSwitchPlace.size() - 1);
             int max = 0;
 
             for (int num : lastList) if (num > max) max = num;
 
 
             for (int j = lastList.size() - 1; j >= 0; j--) {
-                if (numCounter==2 && actualNum!=max){
-                    for (int k = 0; k < j+1; k++) {
+                if (numCounter == 2 && actualNum != max) {
+                    for (int k = 0; k < j + 1; k++) {
                         tempList.add(lastList.get(k));
                     }
-                    tempList.add(actualNum+1);
-                    for (int k = j+2; k < lastList.size(); k++) {
+                    tempList.add(actualNum + 1);
+                    for (int k = j + 2; k < lastList.size(); k++) {
                         tempList.add(lastList.get(k));
                     }
-                    nemTalat=false;
+                    nemTalat = false;
 
 
-                }else if (numCounter==3&&actualNum==max){
-                    for (int k = 0; k < j+2; k++) {
+                } else if (numCounter == 3 && actualNum == max) {
+                    for (int k = 0; k < j + 2; k++) {
                         tempList.add(lastList.get(k));
                     }
-                    tempList.add(actualNum+1);
-                    for (int k = j+3; k < lastList.size(); k++) {
+                    tempList.add(actualNum + 1);
+                    for (int k = j + 3; k < lastList.size(); k++) {
                         tempList.add(lastList.get(k));
                     }
-                    nemTalat=false;
+                    nemTalat = false;
 
 
                 }
 
-                if (lastList.get(j)==actualNum){
+                if (lastList.get(j) == actualNum) {
                     numCounter++;
-                }else {
-                    actualNum=lastList.get(j);
+                } else {
+                    actualNum = lastList.get(j);
                     numCounter = 1;
                 }
 
             }
-            if (nemTalat){
+            if (nemTalat) {
                 tempList.addAll(lastList);
                 tempList.add(1);
             }
@@ -147,46 +159,47 @@ public class Agent extends RaceTrackPlayer {
 
         for (int i = 0; i < tmpSwitchPlace.size(); i++) {
             ArrayList<Integer> differencesList = new ArrayList<>();
-            ArrayList <Integer> currSwitchPlace = tmpSwitchPlace.get(i);
-            for (int j = 0; j < currSwitchPlace.size()-1; j++) {
+            ArrayList<Integer> currSwitchPlace = tmpSwitchPlace.get(i);
+            for (int j = 0; j < currSwitchPlace.size() - 1; j++) {
                 int diff = currSwitchPlace.get(j + 1) - currSwitchPlace.get(j);
                 differencesList.add(diff);
             }
             switchPlace.add(differencesList);
         }
+        //endregion
 
-        int[][] findPath = new int[myTrack.length][myTrack[0].length];
+        //region coins order
+
+        int[][] findPath2 = new int[myTrack.length][myTrack[0].length];
         for (int i = 0; i < myTrack.length; i++) {
             for (int j = 0; j < myTrack[i].length; j++) {
                 if (myTrack[i][j] == 1) {
-                    findPath[i][j] = 0;
+                    findPath2[i][j] = 0;
                 } else if (myTrack[i][j] == 2) {
-                    findPath[i][j] = -100;
+                    findPath2[i][j] = -100;
                 } else if (myTrack[i][j] == 5) {
-                    findPath[i][j] = -12;
+                    findPath2[i][j] = -12;
                 } else if (myTrack[i][j] == 33) {
-                    findPath[i][j] = 0;
+                    findPath2[i][j] = 0;
                 } else {
-                    findPath[i][j] = -100;
+                    findPath2[i][j] = -100;
                 }
-                findPath[state.i][state.j] = -1;
+                findPath2[state.i][state.j] = -1;
             }
         }
         for (int j = 0; j < coins.length; j++) {
-            findPath[coins[j].i][coins[j].j] = ((j + 2) * -1);
+            findPath2[coins[j].i][coins[j].j] = ((j + 2) * -1);
         }
 
 
         for (int actualNumber = -1; actualNumber > -13; actualNumber--) {
-            GetAllDistances(findPath, actualNumber);
+            GetAllDistances(findPath2, actualNumber);
         }
 
 
         int[] nums = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         List<int[]> permutations = new ArrayList<>();
         generatePermutations(nums, 0, permutations);
-
-
 
 
         int shortestDistance = Integer.MAX_VALUE;
@@ -214,7 +227,176 @@ public class Agent extends RaceTrackPlayer {
             else destinationList.add(new Cell(coins[index - 1].i, coins[index - 1].j));
         }
 
+        //endregion
 
+        //region copymap
+
+        PositionWithParent[][] findPath = new PositionWithParent[myTrack.length][myTrack[0].length];
+        for (int i = 0; i < myTrack.length; i++) {
+            for (int j = 0; j < myTrack[i].length; j++) {
+                if (myTrack[i][j] == 1) {
+                    findPath[i][j] = new PositionWithParent(0, i, j);
+                } else if (myTrack[i][j] == 2) {
+                    findPath[i][j] = new PositionWithParent(-1, i, j);
+                } else if (myTrack[i][j] == 5) {
+                    findPath[i][j] = new PositionWithParent(-2, i, j);
+                } else if (myTrack[i][j] == 17) {
+                    findPath[i][j] = new PositionWithParent(-3, i, j);
+                } else if (myTrack[i][j] == 33) {
+                    findPath[i][j] = new PositionWithParent(0, i, j);
+                } else {
+                    findPath[i][j] = new PositionWithParent(-100, i, j);
+                }
+                findPath[state.i][state.j] = new PositionWithParent(1, i, j);
+
+            }
+        }
+        //endregion
+
+
+        //region utlistageneralas
+
+        ArrayList<PositionWithParent[][]> stepPaths = new ArrayList<>();
+
+        for (int i = 1; i < destinationList.size(); i++) {
+            PositionWithParent[][] path = FindPathBetweenTwoPoint(findPath, destinationList.get(i - 1), destinationList.get(i));
+            PositionWithParent[][] pathCopy = copyPath(path);
+            stepPaths.add(pathCopy);
+        }
+
+
+        for (int i = 0; i < stepPaths.size(); i++) {
+            ArrayList<PositionWithParent> routeCellsList = new ArrayList<>();
+            PositionWithParent startRouteCell = stepPaths.get(i)[destinationList.get(i).i][destinationList.get(i).j];
+            PositionWithParent actualRouteCell = stepPaths.get(i)[destinationList.get(i + 1).i][destinationList.get(i + 1).j];
+
+            while (!(actualRouteCell.i == startRouteCell.i && actualRouteCell.j == startRouteCell.j)) {
+                for (int[] neighbor : neighbors) {
+                    int newRow = actualRouteCell.i + neighbor[0];
+                    int newCol = actualRouteCell.j + neighbor[1];
+                    PositionWithParent checkCell = stepPaths.get(i)[newRow][newCol];
+                    try {
+                        if (checkCell.value == 1) {
+                            stepPaths.get(i)[actualRouteCell.i][actualRouteCell.j].value = 0;
+                            routeCellsList.add(checkCell);
+                            actualRouteCell = stepPaths.get(i)[checkCell.i][checkCell.j];
+                        }
+                    } catch (Exception ignored) {
+                    }
+                }
+
+                //routeCellsList.add(startRouteCell);
+                //startRouteCell = stepPaths.get(i)[startRouteCell.parent_i][startRouteCell.parent_j];
+            }
+
+            //if (i == 0) routeCellsList.add(stepPaths.get(0)[destinationList.get(0).i][destinationList.get(0).j]);
+            Collections.reverse(routeCellsList);
+            combinedRouteCellsList.addAll(routeCellsList);
+        }
+
+        //endregion
+
+        //region lepeskinyeres
+
+
+        int[][] vectorNeighbors = {
+                {0, 0}, {0, -1}, {-1, -1}, {-1, 0},
+                {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}
+        };
+
+        ArrayList<int[]> speedVectors = new ArrayList<>();
+        int[] currentSpeedVector = new int[]{0, 0};
+        speedVectors.add(new int[]{currentSpeedVector[0], currentSpeedVector[1]});
+        for (int i = 0; i < combinedRouteCellsList.size() - 1; i++) {
+
+            PositionWithParent currentCell = combinedRouteCellsList.get(i);
+            PositionWithParent nextCell = combinedRouteCellsList.get(i + 1);
+
+
+            int[] tempSpeedVector = new int[2];
+            tempSpeedVector[0] = currentSpeedVector[0] - (nextCell.i - currentCell.i);
+            tempSpeedVector[1] = currentSpeedVector[1] - (nextCell.j - currentCell.j);
+
+            try {
+                for (int j = 0; j < vectorNeighbors.length + 1; j++) {
+                    int[] neighbor = vectorNeighbors[j];
+                    if (neighbor[0] == tempSpeedVector[0] * -1 && neighbor[1] == tempSpeedVector[1] * -1) {
+                        moveList.add(j);
+                        break;
+                    }
+                }
+                currentSpeedVector[0] -= tempSpeedVector[0];
+                currentSpeedVector[1] -= tempSpeedVector[1];
+                speedVectors.add(new int[]{currentSpeedVector[0], currentSpeedVector[1]});
+            } catch (ArrayIndexOutOfBoundsException ignored) {
+
+                for (int j = 0; j < vectorNeighbors.length + 1; j++) {
+                    int[] neighbor = vectorNeighbors[j];
+                    if (neighbor[0] == currentSpeedVector[0] * -1 && neighbor[1] == currentSpeedVector[1] * -1) {
+                        moveList.add(j);
+                        break;
+                    }
+                }
+                currentSpeedVector[0] -= currentSpeedVector[0];
+                currentSpeedVector[1] -= currentSpeedVector[1];
+                speedVectors.add(new int[]{currentSpeedVector[0], currentSpeedVector[1]});
+                i--;
+            }
+        }
+        //endregion
+
+        //region step more
+
+        int numCounter = 0;
+
+        moveList.remove(moveList.size() - 1);
+        for (int i = 0; i < 40; i++) {
+            moveList.add(0);
+        }
+        moveList.add(4);
+        //System.out.println();
+
+
+        int c = -1;
+        for (int i = 0; i < moveList.size(); i++) {
+            c++;
+            Integer integer = moveList.get(i);
+            if (integer == 0) {
+                numCounter++;
+            } else if (numCounter > 2) {
+                int startIndex = i - numCounter;
+                int endIndex = i;
+
+                List<Integer> cutPortion = moveList.subList(startIndex, endIndex);
+
+                ArrayList<Integer> switchVector = new ArrayList<>();
+                ArrayList<Integer> actualSwitchPlace = switchPlace.get(numCounter);
+
+                int lol = DirectionToInt(new Direction(speedVectors.get(c - numCounter)[0], speedVectors.get(c - numCounter)[1]));
+
+
+                for (int j = 0; j < actualSwitchPlace.size(); j++) {
+                    if (actualSwitchPlace.get(j) == 1) {
+                        switchVector.add(lol);
+                    } else if (actualSwitchPlace.get(j) == -1) {
+                        switchVector.add(RevesreDirectionNum(lol));
+                    } else {
+                        switchVector.add(0);
+                    }
+                }
+
+
+                cutPortion.clear();
+                cutPortion.addAll(switchVector);
+                numCounter = 0;
+                i = actualSwitchPlace.size() + startIndex;
+            } else {
+                numCounter = 0;
+            }
+
+        }
+        //System.out.println();
+        //endregion
 
     }
 
@@ -226,7 +408,6 @@ public class Agent extends RaceTrackPlayer {
     List<Integer> bestPath = null;
 
     List<Cell> destinationList = new ArrayList<>();
-
 
 
     ArrayList<PositionWithParent> combinedRouteCellsList = new ArrayList<>();
@@ -250,391 +431,37 @@ public class Agent extends RaceTrackPlayer {
 
     @Override
     public Direction getDirection(long remainingTime) {
-
-
-        if (findRoute) {
-
-            //region mapcopy
-            PositionWithParent[][] findPath = new PositionWithParent[myTrack.length][myTrack[0].length];
-            for (int i = 0; i < myTrack.length; i++) {
-                for (int j = 0; j < myTrack[i].length; j++) {
-                    if (myTrack[i][j] == 1) {
-                        findPath[i][j] = new PositionWithParent(0, i, j);
-                    } else if (myTrack[i][j] == 2) {
-                        findPath[i][j] = new PositionWithParent(-1, i, j);
-                    } else if (myTrack[i][j] == 5) {
-                        findPath[i][j] = new PositionWithParent(-2, i, j);
-                    } else if (myTrack[i][j] == 17) {
-                        findPath[i][j] = new PositionWithParent(-3, i, j);
-                    } else if (myTrack[i][j] == 33) {
-                        findPath[i][j] = new PositionWithParent(0, i, j);
-                    } else {
-                        findPath[i][j] = new PositionWithParent(-100, i, j);
-                    }
-                    findPath[state.i][state.j] = new PositionWithParent(1, i, j);
-
-                }
-            }
-            //endregion
-
-
-            //region middle line generate
-
-            int[][] TRDLneighbors = {
-                    {0, -1}, {-1, 0}, {0, 1}, {1, 0}
-            };
-
-
-            //copy
-            PositionWithParent[][] findMiddleLine = new PositionWithParent[myTrack.length][myTrack[0].length];
-            for (int i = 0; i < myTrack.length; i++) {
-                for (int j = 0; j < myTrack[i].length; j++) {
-                    if (myTrack[i][j] == 1) {
-                        findMiddleLine[i][j] = new PositionWithParent(0, i, j);
-                    } else if (myTrack[i][j] == 2) {
-                        findMiddleLine[i][j] = new PositionWithParent(-1, i, j);
-                    } else if (myTrack[i][j] == 5) {
-                        if (i < 2) {
-                            findMiddleLine[i][j] = new PositionWithParent(-2, i, j);
-                        } else {
-                            findMiddleLine[i][j] = new PositionWithParent(0, i, j);
-                        }
-                    } else if (myTrack[i][j] == 17) {
-                        findMiddleLine[i][j] = new PositionWithParent(0, i, j);
-                    } else if (myTrack[i][j] == 33) {
-                        findMiddleLine[i][j] = new PositionWithParent(0, i, j);
-                    } else {
-                        findMiddleLine[i][j] = new PositionWithParent(-100, i, j);
-                    }
-
-                }
-            }
-
-
-            boolean xd = true;
-            while (xd) {
-                xd = false;
-                for (int c = 0; c < 8; c++) {
-                    for (int i = 0; i < findMiddleLine.length; i++) {
-                        for (int j = 0; j < findMiddleLine[0].length; j++) {
-                            if (c == 0) {
-                                if (findMiddleLine[i][j].value == -1 + c) {
-                                    for (int[] TRDLneighbor : TRDLneighbors) {
-                                        int newRow = i + TRDLneighbor[0];
-                                        int newCol = j + TRDLneighbor[1];
-                                        try {
-                                            if (findMiddleLine[newRow][newCol].value == 0) {
-                                                findMiddleLine[newRow][newCol].value = c + 1;
-                                                xd = true;
-                                            }
-                                        } catch (Exception ignored) {
-                                        }
-
-
-                                    }
-                                }
-                            } else {
-                                if (findMiddleLine[i][j].value == c) {
-                                    for (int[] TRDLneighbor : TRDLneighbors) {
-                                        int newRow = i + TRDLneighbor[0];
-                                        int newCol = j + TRDLneighbor[1];
-                                        try {
-                                            if (findMiddleLine[newRow][newCol].value == 0) {
-                                                findMiddleLine[newRow][newCol].value = c + 1;
-                                                xd = true;
-                                            }
-                                        } catch (Exception ignored) {
-                                        }
-
-
-                                    }
-                                }
-                            }
-
-
-                        }
-                    }
-                }
-            }
-
-
-
-            /*
-            //Restrict the map by one cell
-            for (int i = 0; i < findMiddleLine.length; i++) {
-                for (int j = 0; j < findMiddleLine[0].length; j++) {
-                    if (findMiddleLine[i][j].value == 1) {
-                        findMiddleLine[i][j].value = -1;
-                    } else if (findMiddleLine[i][j].value >= 2) {
-                        findMiddleLine[i][j].value = 0;
-                    } else {
-                        findMiddleLine[i][j].value = -1;
-                    }
-                }
-            }
-             */
-
-            for (int i = 0; i < findMiddleLine.length; i++) {
-                for (int j = 0; j < findMiddleLine[0].length; j++) {
-                    if (findMiddleLine[i][j].value == 0) {
-                        findMiddleLine[i][j].value = -1;
-                    } else if (findMiddleLine[i][j].value >= 1) {
-                        findMiddleLine[i][j].value = 0;
-                    } else {
-                        findMiddleLine[i][j].value = -1;
-                    }
-                }
-            }
-            for (int i = 0; i < findMiddleLine.length; i++) {
-                for (int j = 0; j < findMiddleLine[0].length; j++) {
-                    if (findPath[i][j].value == -2 && i < 2) findMiddleLine[i][j].value = -2;
-                    if (findPath[i][j].value == -3) {
-                        for (int[] neighbor : neighbors) {
-                            int newRow = i + neighbor[0];
-                            int newCol = j + neighbor[1];
-                            try {
-                                if (findPath[newRow][newCol].value == 0) {
-                                    findMiddleLine[newRow][newCol].value = 0;
-                                }
-
-                            } catch (Exception ignored) {
-                            }
-                        }
-                        if (findPath[i][j].value == -3) findMiddleLine[i][j].value = -3;
-
-                    }
-                }
-            }
-
-
-            //coinok korul kitakarit
-            for (int[] neighbor : TRDLneighbors) {
-                int newRow = state.i + neighbor[0];
-                int newCol = state.j + neighbor[1];
-                try {
-                    if (findPath[newRow][newCol].value == 0) {
-                        findMiddleLine[newRow][newCol].value = 0;
-                    }
-
-                } catch (Exception ignored) {
-                }
-            }
-            findMiddleLine[state.i][state.j].value = 1;
-
-
-            //endregion
-
-            //region find way
-
-            findPath = findMiddleLine;
-
-
-
-            ArrayList<PositionWithParent[][]> stepPaths = new ArrayList<>();
-
-            for (int i = 1; i < destinationList.size(); i++) {
-                PositionWithParent[][] path = FindPathBetweenTwoPoint(findPath, destinationList.get(i - 1), destinationList.get(i));
-                PositionWithParent[][] pathCopy = copyPath(path);
-                stepPaths.add(pathCopy);
-
-
-            }
-
-
-            for (int i = 0; i < stepPaths.size(); i++) {
-                ArrayList<PositionWithParent> routeCellsList = new ArrayList<>();
-                PositionWithParent currentRouteCell = stepPaths.get(i)[destinationList.get(i + 1).i][destinationList.get(i + 1).j];
-
-                while (currentRouteCell.parent_value != -1) {
-                    routeCellsList.add(currentRouteCell);
-                    currentRouteCell = stepPaths.get(i)[currentRouteCell.parent_i][currentRouteCell.parent_j];
-                }
-                if (i == 0) routeCellsList.add(stepPaths.get(0)[destinationList.get(0).i][destinationList.get(0).j]);
-                Collections.reverse(routeCellsList);
-                combinedRouteCellsList.addAll(routeCellsList);
-            }
-
-
-
-
-
-
-
-
-
-
-            //endregion
-
-
-
-
-            //region lepeskinyeres
-
-
-
-            int[][] vectorNeighbors = {
-                    {0, 0}, {0, -1}, {-1, -1}, {-1, 0},
-                    {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}
-            };
-
-            ArrayList<int[]> speedVectors = new ArrayList<>();
-            int[] currentSpeedVector = new int[]{0, 0};
-            speedVectors.add(new int[]{currentSpeedVector[0],currentSpeedVector[1]});
-            for (int i = 0; i < combinedRouteCellsList.size() - 1; i++) {
-                ArrayList<int[]> neededSpeedVectors = new ArrayList<>();
-
-                PositionWithParent currentCell = combinedRouteCellsList.get(i);
-
-                int maxDistance = abs(Math.max(currentSpeedVector[0],currentSpeedVector[1]));
-
-                //lehetseges celok kiszamitasa
-                for (int j = 1; j < maxDistance+2; j++) {
-                    try {
-                        PositionWithParent nextCell = combinedRouteCellsList.get(i + j);
-                        int[] tempSpeedVector = new int[2];
-                        tempSpeedVector[0] = nextCell.i - currentCell.i;
-                        tempSpeedVector[1] = nextCell.j - currentCell.j;
-                        neededSpeedVectors.add(tempSpeedVector);
-                    }catch (Exception ignored){}
-                }
-
-
-                outerFor:
-                for (int c = 0; c < neededSpeedVectors.size(); c++) {
-                    int[] tempSpeedVector = new int[2];
-                    tempSpeedVector[0] = currentSpeedVector[0] - neededSpeedVectors.get(c)[0];
-                    tempSpeedVector[1] = currentSpeedVector[1] - neededSpeedVectors.get(c)[1];
-
-                    try {
-                        for (int j = 0; j < vectorNeighbors.length + 1; j++) {
-                            int[] neighbor = vectorNeighbors[j];
-                            if (neighbor[0] == tempSpeedVector[0] * -1 && neighbor[1] == tempSpeedVector[1] * -1) {
-                                moveList.add(j);
-                                //System.out.println(toString(RaceTrackGame.DIRECTIONS[j]));
-                                break;
-                            }
-                        }
-                        currentSpeedVector[0] -= tempSpeedVector[0];
-                        currentSpeedVector[1] -= tempSpeedVector[1];
-                        speedVectors.add(new int[]{currentSpeedVector[0],currentSpeedVector[1]});
-                        break outerFor;
-                    } catch (ArrayIndexOutOfBoundsException ignored) {
-
-                        for (int j = 0; j < vectorNeighbors.length + 1; j++) {
-                            int[] neighbor = vectorNeighbors[j];
-                            if (neighbor[0] == currentSpeedVector[0] * -1 && neighbor[1] == currentSpeedVector[1] * -1) {
-                                moveList.add(j);
-                                break;
-                            }
-                        }
-                        currentSpeedVector[0] -= currentSpeedVector[0];
-                        currentSpeedVector[1] -= currentSpeedVector[1];
-                        speedVectors.add(new int[]{currentSpeedVector[0],currentSpeedVector[1]});
-                        i--;
-                        break outerFor;
-
-                    }
-
-
-                }
-
-
-
-            }
-            //endregion
-
-            //region step more
-
-            int numCounter = 0;
-
-
-            int c = -1;
-            for (int i = 0; i < moveList.size(); i++) {
-                c++;
-                Integer integer = moveList.get(i);
-                if (integer == 0) {
-                    numCounter++;
-                } else if ( numCounter>2) {
-                    int startIndex = i-numCounter;
-                    int endIndex = i;
-
-                    List<Integer> cutPortion = moveList.subList(startIndex, endIndex);
-
-                    ArrayList<Integer> switchVector = new ArrayList<>();
-                    ArrayList<Integer> actualSwitchPlace = switchPlace.get(numCounter);
-
-                    int lol = DirectionToInt(new Direction(speedVectors.get(c-numCounter)[0],speedVectors.get(c-numCounter)[1]));
-
-
-                    for (int j = 0; j < actualSwitchPlace.size(); j++) {
-                        if (actualSwitchPlace.get(j)==1){
-                            switchVector.add(lol);
-                        }else if (actualSwitchPlace.get(j)==-1){
-                            switchVector.add(RevesreDirectionNum(lol));
-                        }else {
-                            switchVector.add(0);
-                        }
-                    }
-
-
-                    cutPortion.clear();
-                    cutPortion.addAll(switchVector);
-                    numCounter = 0;
-                    i=actualSwitchPlace.size()+startIndex;
-                }else {
-                    numCounter = 0;
-                }
-
-            }
-
-
-
-
-            //endregion
-
-            //delete Later
-            findRoute = false;
-
-
-        } else {
-            lastPosition = toCell(state);
-            try {
-                moveListCounter++;
-                return RaceTrackGame.DIRECTIONS[moveList.get(moveListCounter)];
-            } catch (Exception error) {
-                return RaceTrackGame.DIRECTIONS[random.nextInt(RaceTrackGame.DIRECTIONS.length)];
-            }
-
+        try {
+            moveListCounter++;
+            return RaceTrackGame.DIRECTIONS[moveList.get(moveListCounter)];
+        } catch (Exception error) {
+            return RaceTrackGame.DIRECTIONS[random.nextInt(RaceTrackGame.DIRECTIONS.length)];
         }
-
-        return RaceTrackGame.DIRECTIONS[0];
-
-
     }
 
-    private int ForceBetween(int number){
+    private int ForceBetween(int number) {
         if (number <= -1) {
-            return  -1;
+            return -1;
         } else if (number >= 1) {
-            return  1;
+            return 1;
         }
         return 0;
     }
 
-    private int RevesreDirectionNum(int num){
+    private int RevesreDirectionNum(int num) {
         Direction tmpDir = IntToDirection(num);
-        Direction forditottIranyDir = new Direction(tmpDir.i*-1,tmpDir.j*-1);
+        Direction forditottIranyDir = new Direction(tmpDir.i * -1, tmpDir.j * -1);
         return DirectionToInt(forditottIranyDir);
     }
 
-    private Direction IntToDirection(int num){
+    private Direction IntToDirection(int num) {
         return RaceTrackGame.DIRECTIONS[num];
     }
 
-    private int DirectionToInt(Direction dir){
+    private int DirectionToInt(Direction dir) {
         for (int i = 0; i < RaceTrackGame.DIRECTIONS.length; i++) {
             Direction aktVizsgaltDirection = RaceTrackGame.DIRECTIONS[i];
-            if (aktVizsgaltDirection.i==dir.i&&aktVizsgaltDirection.j==dir.j){
+            if (aktVizsgaltDirection.i == dir.i && aktVizsgaltDirection.j == dir.j) {
                 return i;
             }
         }
@@ -735,8 +562,60 @@ public class Agent extends RaceTrackPlayer {
                 }
             }
         }
-        //PrintPathMapWOWalls(baseMap);
 
+        boolean javitoUt = false;
+        int[] tmpCell = new int[]{-1, -1};
+        for (int i = 0; i < baseMap.length; i++) {
+            for (int j = 0; j < baseMap[i].length; j++) {
+                if (baseMap[i][j].value == 1 && javitoUt && (baseMap[i][j + 1].value != 1 || baseMap[i][j - 1].value != 1)) {
+                    for (int k = tmpCell[1]; k < j; k++) {
+                        baseMap[i][k].value = 1;
+                        if (baseMap[i - 1][k].value == 1) {
+                            baseMap[i - 1][k].value = 0;
+                        }
+                    }
+                    javitoUt = false;
+                    tmpCell[0] = -1;
+                    tmpCell[1] = -1;
+
+                }
+                if (baseMap[i][j].value == 1 && !javitoUt) {
+                    javitoUt = true;
+                    tmpCell[0] = i;
+                    tmpCell[1] = j;
+                } else if (baseMap[i][j].value == -1 || baseMap[i][j].value == 1) {
+                    javitoUt = false;
+                    tmpCell[0] = -1;
+                    tmpCell[1] = -1;
+                }
+            }
+        }
+
+        javitoUt = false;
+        tmpCell = new int[]{-1, -1};
+        for (int j = 0; j < baseMap[0].length; j++) {
+            for (int i = 0; i < baseMap.length; i++) {
+                if (baseMap[i][j].value == 1 && javitoUt && (baseMap[i + 1][j].value != 1 || baseMap[i - 1][j].value != 1)) {
+                    for (int k = tmpCell[0]; k < i; k++) {
+                        baseMap[k][j].value = 1;
+                        if (baseMap[k][j - 1].value == 1) baseMap[k][j - 1].value = 0;
+                    }
+                    javitoUt = false;
+                    tmpCell[0] = -1;
+                    tmpCell[1] = -1;
+
+                }
+                if (baseMap[i][j].value == 1 && !javitoUt) {
+                    javitoUt = true;
+                    tmpCell[0] = i;
+                    tmpCell[1] = j;
+                } else if (baseMap[i][j].value == -1 || baseMap[i][j].value == 1) {
+                    javitoUt = false;
+                    tmpCell[0] = -1;
+                    tmpCell[1] = -1;
+                }
+            }
+        }
 
         return baseMap;
 
