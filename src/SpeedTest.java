@@ -76,6 +76,8 @@ public class SpeedTest extends RaceTrackPlayer {
         }
     }
 
+    final boolean FULLMAPSEARCH =true;
+
     public int[][] myTrack = track;
 
     public int[][] distanceMatrix = new int[12][12];
@@ -137,6 +139,8 @@ public class SpeedTest extends RaceTrackPlayer {
         destinationCordinates.add(new int[]{3, 127});
         //endregion
 
+        
+
         for (int mapNumber = 0; mapNumber < stepPaths.size(); mapNumber++) {
             PositionWithParent[][] mapPositionWithParent = stepPaths.get(mapNumber);
 
@@ -171,12 +175,21 @@ public class SpeedTest extends RaceTrackPlayer {
 
             for (int i = 0; i < UltimatePath.length; i++) {
                 for (int j = 0; j < UltimatePath[i].length; j++) {
+                    if (FULLMAPSEARCH){
+                        if (findPath[i][j].value!=-1){
+                            UltimatePath[i][j].faceValue = 0;
+                            UltimatePath[i][j].hiddenValue = 0;
+                        }
+                    }
+
                     if (i < 3) {
                         UltimatePath[i][j].faceValue = -1;
                         UltimatePath[i][j].hiddenValue = -1;
                     }
                 }
             }
+            //printFinalMapFaceValues(UltimatePath);
+
 
             int[] from = new int[]{
                     destinationCordinates.get(mapNumber)[0],destinationCordinates.get(mapNumber)[1]
