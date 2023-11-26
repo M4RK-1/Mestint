@@ -155,14 +155,19 @@ public class SpeedTest extends RaceTrackPlayer {
                             int newRow = i + neighbor[0];
                             int newCol = j + neighbor[1];
                             try {
-                                UltimatePath[newRow][newCol].faceValue = 0;
-                                UltimatePath[newRow][newCol].hiddenValue = 0;
+                                if (findPath[newRow][newCol].value!=-1){
+                                    UltimatePath[newRow][newCol].faceValue = 0;
+                                    UltimatePath[newRow][newCol].hiddenValue = 0;
+                                }
+
                             } catch (Exception ignored) {
                             }
                         }
                     }
                 }
             }
+
+
 
             for (int i = 0; i < UltimatePath.length; i++) {
                 for (int j = 0; j < UltimatePath[i].length; j++) {
