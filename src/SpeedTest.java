@@ -125,192 +125,191 @@ public class SpeedTest extends RaceTrackPlayer {
             PositionWithParent[][] pathCopy = copyPath(path);
             stepPaths.add(pathCopy);
         }
+        //endregion
 
-
-        //for (PositionWithParent[][] mapPositionWithParent:stepPaths) {
-
-        //}
-
-        UltimateCell[][] UltimatePath = new UltimateCell[myTrack.length][myTrack[0].length];
-
-        for (int i = 0; i < UltimatePath.length; i++) {
-            for (int j = 0; j < UltimatePath[i].length; j++) {
-                UltimatePath[i][j]=new UltimateCell(-1,-1,i,j);
-            }
+        //region cel kordinatak kinyerese
+        ArrayList<int[]> destinationCordinates = new ArrayList<>();
+        destinationCordinates.add(new int[]{2, 7});
+        for (int i = 1; i < bestPath.size()-1; i++) {
+            Coin tmpCoin= new Coin(coins[bestPath.get(i)-1]);
+            destinationCordinates.add(new int[]{tmpCoin.i, tmpCoin.j});
         }
+        destinationCordinates.add(new int[]{3, 127});
+        //endregion
 
-        for (PositionWithParent[][] stepPath: stepPaths) {
-            for (int i = 0; i < stepPath.length; i++) {
-                for (int j = 0; j < stepPath[i].length; j++) {
-                    if (stepPath[i][j].value==1){
+        for (int mapNumber = 0; mapNumber < stepPaths.size(); mapNumber++) {
+            PositionWithParent[][] mapPositionWithParent = stepPaths.get(mapNumber);
+
+            UltimateCell[][] UltimatePath = new UltimateCell[myTrack.length][myTrack[0].length];
+            for (int i = 0; i < UltimatePath.length; i++) {
+                for (int j = 0; j < UltimatePath[i].length; j++) {
+                    UltimatePath[i][j] = new UltimateCell(-1, -1, i, j);
+                }
+            }
+
+
+            for (int i = 0; i < mapPositionWithParent.length; i++) {
+                for (int j = 0; j < mapPositionWithParent[i].length; j++) {
+                    if (mapPositionWithParent[i][j].value == 1) {
                         for (int[] neighbor : vectorNeighbors) {
                             int newRow = i + neighbor[0];
                             int newCol = j + neighbor[1];
                             try {
-                                UltimatePath[newRow][newCol].faceValue=0;
-                                UltimatePath[newRow][newCol].hiddenValue=0;
+                                UltimatePath[newRow][newCol].faceValue = 0;
+                                UltimatePath[newRow][newCol].hiddenValue = 0;
                             } catch (Exception ignored) {
                             }
                         }
                     }
                 }
             }
-        }
 
-
-
-
-        for (int i = 0; i < UltimatePath.length; i++) {
-            for (int j = 0; j < UltimatePath[i].length; j++) {
-                if (i<3){
-                    UltimatePath[i][j].faceValue=-1;
-                    UltimatePath[i][j].hiddenValue=-1;
-                }
-                if (i ==2&&j==7){
-                    UltimatePath[i][j].hiddenValue=1;
-                    UltimatePath[i][j].faceValue=0;
-                }
-                if (i==3 & j==127){
-                    UltimatePath[i][j].hiddenValue=12;
+            for (int i = 0; i < UltimatePath.length; i++) {
+                for (int j = 0; j < UltimatePath[i].length; j++) {
+                    if (i < 3) {
+                        UltimatePath[i][j].faceValue = -1;
+                        UltimatePath[i][j].hiddenValue = -1;
+                    }
                 }
             }
-        }
-        ArrayList<int[]> destinationCordinates = new ArrayList<>();
-        destinationCordinates.add(new int[]{2, 7});
-        for (int i = 1; i < bestPath.size()-1; i++) {
-            Coin tmpCoin= new Coin(coins[bestPath.get(i)-1]);
-            destinationCordinates.add(new int[]{tmpCoin.i, tmpCoin.j});
-            UltimatePath[tmpCoin.i][tmpCoin.j].hiddenValue=i+1;
-        }
-        destinationCordinates.add(new int[]{3, 127});
 
-        //endregion
+            int[] from = new int[]{
+                    destinationCordinates.get(mapNumber)[0],destinationCordinates.get(mapNumber)[1]
+            };
+            int[] to = new int[]{
+                    destinationCordinates.get(mapNumber+1)[0],destinationCordinates.get(mapNumber+1)[1]
+            };
 
-        UltimatePath[2][7].speedVectors.add(new int[]{0,0});
-        UltimatePath[2][7].numberOfSteps.add(0);
+            UltimatePath[from[0]][from[1]].speedVectors.add(new int[]{0, 0});
+            UltimatePath[from[0]][from[1]].numberOfSteps.add(0);
 
 
-        ArrayList<ArrayList<UltimateCell>> stepTree = new ArrayList<>();
-        ArrayList<ArrayList<int[]>> speedTree = new ArrayList<>();
-        ArrayList<ArrayList<Integer>> directionTree = new ArrayList<>();
-        ArrayList<ArrayList<Integer>> treeLayerParents = new ArrayList<>();
+            ArrayList<ArrayList<UltimateCell>> stepTree = new ArrayList<>();
+            ArrayList<ArrayList<int[]>> speedTree = new ArrayList<>();
+            ArrayList<ArrayList<Integer>> directionTree = new ArrayList<>();
+            ArrayList<ArrayList<Integer>> treeLayerParents = new ArrayList<>();
 
-        stepTree.add(new ArrayList<>(){{add(UltimatePath[2][7]);}});
-        speedTree.add(new ArrayList<>(){{add(new int[]{0,0});}});
-        directionTree.add(new ArrayList<>(){{add(0);}});
-        treeLayerParents.add(new ArrayList<>(){{add(0);}});
+            stepTree.add(new ArrayList<>() {{
+                add(UltimatePath[from[0]][from[1]]);
+            }});
+            speedTree.add(new ArrayList<>() {{
+                add(new int[]{0, 0});
+            }});
+            directionTree.add(new ArrayList<>() {{
+                add(0);
+            }});
+            treeLayerParents.add(new ArrayList<>() {{
+                add(0);
+            }});
 
 
+            outerfor:
+            for (int c = 0; c < 1000; c++) {
+                //printFinalMapHiddenValues(UltimatePath);
 
-        outerfor:
-        for (int c = 0; c<1000; c++) {
-            //printFinalMapHiddenValues(UltimatePath);
+                //clear last steps
+                for (PositionWithParent[][] stepPath : stepPaths) {
+                    for (int i = 0; i < stepPath.length; i++) {
+                        for (int j = 0; j < stepPath[i].length; j++) {
+                            if (stepPath[i][j].value == 1) {
+                                for (int[] neighbor : vectorNeighbors) {
+                                    int newRow = i + neighbor[0];
+                                    int newCol = j + neighbor[1];
+                                    try {
+                                        if (UltimatePath[newRow][newCol].hiddenValue == -2) {
+                                            UltimatePath[newRow][newCol].hiddenValue = 0;
+                                        }
 
-            //clear last steps
-            for (PositionWithParent[][] stepPath: stepPaths) {
-                for (int i = 0; i < stepPath.length; i++) {
-                    for (int j = 0; j < stepPath[i].length; j++) {
-                        if (stepPath[i][j].value==1){
-                            for (int[] neighbor : vectorNeighbors) {
-                                int newRow = i + neighbor[0];
-                                int newCol = j + neighbor[1];
-                                try {
-                                    if (UltimatePath[newRow][newCol].hiddenValue==-2){
-                                        UltimatePath[newRow][newCol].hiddenValue=0;
+                                    } catch (Exception ignored) {
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //System.out.println();
+
+                ArrayList<UltimateCell> actualTreeLayer = stepTree.get(c);
+                ArrayList<int[]> actualSpeedLayer = speedTree.get(c);
+
+
+                ArrayList<UltimateCell> nextTreeLayer = new ArrayList<>();
+                ArrayList<int[]> nextSpeedLayer = new ArrayList<>();
+                ArrayList<Integer> nextDirectionLayer = new ArrayList<>();
+                ArrayList<Integer> nextLayerParents = new ArrayList<>();
+
+
+                for (int i = 0; i < actualTreeLayer.size(); i++) {
+
+                    UltimateCell actalUltimateCell = actualTreeLayer.get(i);
+                    int[] actualSpeed = actualSpeedLayer.get(i);
+
+
+                    for (int j = 0; j < vectorNeighbors.length; j++) {
+                        int[] neighbor = vectorNeighbors[j];
+                        int newRow = actalUltimateCell.i + actualSpeed[0] + neighbor[0];
+                        int newCol = actalUltimateCell.j + actualSpeed[1] + neighbor[1];
+                        try {
+                            UltimateCell inspectedUltimateCell = UltimatePath[newRow][newCol];
+                            if (inspectedUltimateCell.faceValue == 0) {
+                                int[] newSpeed = new int[]{actualSpeed[0] + neighbor[0], actualSpeed[1] + neighbor[1]};
+
+                                //mar meglevo speed check
+                                boolean vanEzASpeed = false;
+                                for (int[] speed : inspectedUltimateCell.speedVectors) {
+                                    if (speed[0] == newSpeed[0] && speed[1] == newSpeed[1]) {
+                                        vanEzASpeed = true;
+                                        break;
+                                    }
+                                }
+                                //falba utkozes check
+                                boolean vanFal = false;
+                                Cell lastCell = new Cell(actalUltimateCell.i, actalUltimateCell.j);
+                                Cell newCell = new Cell(inspectedUltimateCell.i, inspectedUltimateCell.j);
+                                for (Cell utCell : line8connect(lastCell, newCell)) {
+                                    if (!isNotWall(utCell, track)) {
+                                        vanFal = true;
+                                        break;
+                                    }
+                                }
+
+                                if (!(vanEzASpeed || vanFal)) {
+                                    UltimatePath[newRow][newCol].hiddenValue = -2;
+                                    UltimatePath[newRow][newCol].speedVectors.add(newSpeed);
+                                    UltimatePath[newRow][newCol].numberOfSteps.add(c + 1);
+                                    UltimatePath[newRow][newCol].parentPosition.add(new int[]{actalUltimateCell.i, actalUltimateCell.j});
+                                    nextTreeLayer.add(UltimatePath[newRow][newCol]);
+                                    nextSpeedLayer.add(newSpeed);
+                                    nextDirectionLayer.add(j);
+                                    nextLayerParents.add(i);
+
+                                    if (newRow == to[0] && newCol == to[1]
+                                            && newSpeed[0] == 0 && newSpeed[1] == 0) {
+                                        stepTree.add(nextTreeLayer);
+                                        speedTree.add(nextSpeedLayer);
+                                        directionTree.add(nextDirectionLayer);
+                                        treeLayerParents.add(nextLayerParents);
+                                        break outerfor;
                                     }
 
-                                } catch (Exception ignored) {
                                 }
+
                             }
+
+                        } catch (Exception ignored) {
                         }
                     }
                 }
-            }
-
-            //System.out.println();
-
-            ArrayList<UltimateCell> actualTreeLayer = stepTree.get(c);
-            ArrayList<int[]> actualSpeedLayer = speedTree.get(c);
 
 
-            ArrayList<UltimateCell> nextTreeLayer = new ArrayList<>();
-            ArrayList<int[]> nextSpeedLayer = new ArrayList<>();
-            ArrayList<Integer> nextDirectionLayer = new ArrayList<>();
-            ArrayList<Integer> nextLayerParents = new ArrayList<>();
+                //region purge
+
+                //System.out.println(c+".interation");
+                //System.out.println("before purge:"+nextTreeLayer.size());
 
 
-            for (int i = 0; i < actualTreeLayer.size(); i++) {
-
-                UltimateCell actalUltimateCell = actualTreeLayer.get(i);
-                int[] actualSpeed = actualSpeedLayer.get(i);
-
-
-                for (int j = 0; j < vectorNeighbors.length; j++) {
-                    int[] neighbor = vectorNeighbors[j];
-                    int newRow = actalUltimateCell.i + actualSpeed[0] + neighbor[0];
-                    int newCol = actalUltimateCell.j + actualSpeed[1] + neighbor[1];
-                    try {
-                        UltimateCell inspectedUltimateCell = UltimatePath[newRow][newCol];
-                        if (inspectedUltimateCell.faceValue == 0) {
-                            int[] newSpeed = new int[]{actualSpeed[0] + neighbor[0], actualSpeed[1] + neighbor[1]};
-
-                            //mar meglevo speed check
-                            boolean vanEzASpeed = false;
-                            for (int[] speed : inspectedUltimateCell.speedVectors) {
-                                if (speed[0] == newSpeed[0] && speed[1] == newSpeed[1]) {
-                                    vanEzASpeed = true;
-                                    break;
-                                }
-                            }
-                            //falba utkozes check
-                            boolean vanFal = false;
-                            Cell lastCell = new Cell(actalUltimateCell.i, actalUltimateCell.j);
-                            Cell newCell = new Cell(inspectedUltimateCell.i, inspectedUltimateCell.j);
-                            for (Cell utCell : line8connect(lastCell, newCell)) {
-                                if (!isNotWall(utCell, track)) {
-                                    vanFal = true;
-                                    break;
-                                }
-                            }
-
-                            if (!(vanEzASpeed || vanFal)) {
-                                UltimatePath[newRow][newCol].hiddenValue = -2;
-                                UltimatePath[newRow][newCol].speedVectors.add(newSpeed);
-                                UltimatePath[newRow][newCol].numberOfSteps.add(c + 1);
-                                UltimatePath[newRow][newCol].parentPosition.add(new int[]{actalUltimateCell.i, actalUltimateCell.j});
-                                nextTreeLayer.add(UltimatePath[newRow][newCol]);
-                                nextSpeedLayer.add(newSpeed);
-                                nextDirectionLayer.add(j);
-                                nextLayerParents.add(i);
-
-                                if (newRow == destinationCordinates.get(11)[0] && newCol == destinationCordinates.get(11)[1]
-                                        && newSpeed[0] == 0 && newSpeed[1] == 0) {
-                                    stepTree.add(nextTreeLayer);
-                                    speedTree.add(nextSpeedLayer);
-                                    directionTree.add(nextDirectionLayer);
-                                    treeLayerParents.add(nextLayerParents);
-                                    break outerfor;
-                                }
-
-                            }
-
-                        }
-
-                    } catch (Exception ignored) {
-                    }
-                }
-            }
-
-
-
-
-            //region purge
-
-            //System.out.println(c+".interation");
-            //System.out.println("before purge:"+nextTreeLayer.size());
-
-
-            //nextTreeLayer.removeIf(n -> squareDistance(2,7 ,n.i,n.j) < finalC-1 );
+                //nextTreeLayer.removeIf(n -> squareDistance(2,7 ,n.i,n.j) < finalC-1 );
 
             /*if (c>3){
 
@@ -371,78 +370,52 @@ public class SpeedTest extends RaceTrackPlayer {
             System.out.println("after purge:"+nextTreeLayer.size());
             System.out.println();*/
 
-            //endregion
+                //endregion
 
 
+                stepTree.add(nextTreeLayer);
+                speedTree.add(nextSpeedLayer);
+                directionTree.add(nextDirectionLayer);
+                treeLayerParents.add(nextLayerParents);
 
-
-
-            stepTree.add(nextTreeLayer);
-            speedTree.add(nextSpeedLayer);
-            directionTree.add(nextDirectionLayer);
-            treeLayerParents.add(nextLayerParents);
-
-        }
-
-        ArrayList<UltimateCell> path = new ArrayList<>();
-        int outerListSize = stepTree.size();
-        ArrayList<UltimateCell> lastInnerList = stepTree.get(outerListSize - 1);
-        ArrayList<Integer> lastParentList = treeLayerParents.get(outerListSize - 1);
-        ArrayList<Integer> lastDirectionList = directionTree.get(outerListSize - 1);
-        int innerListSize = lastInnerList.size();
-
-        UltimateCell actualUltimateCell = lastInnerList.get(innerListSize - 1);
-        int actualDirection = lastDirectionList.get(innerListSize - 1);
-        int actualParent = lastParentList.get(innerListSize - 1);
-        moveList.add(actualDirection);
-        path.add(actualUltimateCell);
-
-        for (int i = outerListSize - 2; i >= 0; i--) {
-            lastInnerList = stepTree.get(i);
-            lastParentList = treeLayerParents.get(i);
-            lastDirectionList = directionTree.get(i);
-
-
-
-            actualDirection = lastDirectionList.get(actualParent);
-            actualUltimateCell = lastInnerList.get(actualParent);
-            actualParent = lastParentList.get(actualParent);
-
-
-            path.add(actualUltimateCell);
-            moveList.add(actualDirection);
-        }
-        //System.out.println("GECI");
-
-        Collections.reverse(path);
-        Collections.reverse(moveList);
-
-        /*for (int i = outerListSize - 2; i >= 0; i--) {
-            lastInnerList = stepTree.get(i);
-            innerListSize = lastInnerList.size();
-            for (int j = 0; j < lastInnerList.size(); j++) {
-                if (lastInnerList.get(j).i== path.get(path.size() - 1).parentPosition.get(0)[0]&&
-                        lastInnerList.get(j).j== path.get(path.size() - 1).parentPosition.get(0)[1]){
-                    UltimateCell lastElement = lastInnerList.get(innerListSize - 1);
-                    path.add(lastElement);
-                    break;
-                }
             }
 
+            ArrayList<UltimateCell> path = new ArrayList<>();
+            ArrayList<Integer> pathDirections = new ArrayList<>();
+            int outerListSize = stepTree.size();
+            ArrayList<UltimateCell> lastInnerList = stepTree.get(outerListSize - 1);
+            ArrayList<Integer> lastParentList = treeLayerParents.get(outerListSize - 1);
+            ArrayList<Integer> lastDirectionList = directionTree.get(outerListSize - 1);
+            int innerListSize = lastInnerList.size();
+
+            UltimateCell actualUltimateCell = lastInnerList.get(innerListSize - 1);
+            int actualDirection = lastDirectionList.get(innerListSize - 1);
+            int actualParent = lastParentList.get(innerListSize - 1);
+            pathDirections.add(actualDirection);
+            path.add(actualUltimateCell);
+
+            for (int i = outerListSize - 2; i >= 1; i--) {
+                lastInnerList = stepTree.get(i);
+                lastParentList = treeLayerParents.get(i);
+                lastDirectionList = directionTree.get(i);
+
+
+                actualDirection = lastDirectionList.get(actualParent);
+                actualUltimateCell = lastInnerList.get(actualParent);
+                actualParent = lastParentList.get(actualParent);
+
+
+                path.add(actualUltimateCell);
+                pathDirections.add(actualDirection);
+            }
+            //System.out.println("GECI");
+
+            Collections.reverse(path);
+            Collections.reverse(pathDirections);
+
+            moveList.addAll(pathDirections);
+
         }
-        */
-
-
-
-
-
-
-
-
-        //endregion
-
-
-
     }
 
     public int squareDistance(int ai,int aj,int bi, int bj) {
