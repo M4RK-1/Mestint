@@ -16,6 +16,38 @@ import static java.lang.Math.abs;
 public class SpeedTest extends RaceTrackPlayer {
 
 
+    public static class TreeLayer {
+        ArrayList<UltimateCell> stepLayer = new ArrayList<>();
+        ArrayList<int[]> speedLayer = new ArrayList<>();
+        ArrayList<Integer> directionLayer = new ArrayList<>();
+        ArrayList<Integer> layerConnectionLayer = new ArrayList<>();
+
+        public TreeLayer(ArrayList<UltimateCell> stepLayer, ArrayList<int[]> speedLayer, ArrayList<Integer> directionLayer, ArrayList<Integer> layerConnectionLayer) {
+            this.stepLayer = stepLayer;
+            this.speedLayer = speedLayer;
+            this.directionLayer = directionLayer;
+            this.layerConnectionLayer = layerConnectionLayer;
+        }
+
+        public TreeLayer() {
+        }
+
+        public void setStepLayer(ArrayList<UltimateCell> stepLayer) {
+            this.stepLayer = stepLayer;
+        }
+
+        public void setSpeedLayer(ArrayList<int[]> speedLayer) {
+            this.speedLayer = speedLayer;
+        }
+
+        public void setDirectionLayer(ArrayList<Integer> directionLayer) {
+            this.directionLayer = directionLayer;
+        }
+
+        public void setLayerConnectionLayer(ArrayList<Integer> layerConnectionLayer) {
+            this.layerConnectionLayer = layerConnectionLayer;
+        }
+    }
     public static class PositionWithParent {
         int value;
         int i;
@@ -108,6 +140,7 @@ public class SpeedTest extends RaceTrackPlayer {
 
         for (int destNum = 0; destNum < destinationCordinates.size() - 1; destNum++) {
 
+
             int[] from = new int[]{destinationCordinates.get(destNum)[0], destinationCordinates.get(destNum)[1]};
             int[] to = new int[]{destinationCordinates.get(destNum + 1)[0], destinationCordinates.get(destNum + 1)[1]};
 
@@ -134,20 +167,14 @@ public class SpeedTest extends RaceTrackPlayer {
             }
             //endregion
 
-
-            //region kezdo mezo setup
-            //UltimatePath[from[0]][from[1]].speedVectors.add(new int[]{0, 0});
-            //endregion
-
-
             //region fa struktura letrehozasa
             ArrayList<TreeLayer> tree = new ArrayList<>();
-
-
             //endregion
 
 
+            //region elso layer init
             int[] finalSpeedThroughIterations = speedThroughIterations;
+
             TreeLayer elsoLayer = new TreeLayer(new ArrayList<>() {{
                 add(UltimatePath[from[0]][from[1]]);}},
                     new ArrayList<>() {{add(finalSpeedThroughIterations);}},
@@ -160,23 +187,7 @@ public class SpeedTest extends RaceTrackPlayer {
 
 
             outerfor:
-            for (int c = 0; c < 100; c++) {
-                //printFinalMapHiddenValues(UltimatePath);
-
-                for (int i = 0; i < UltimatePath.length; i++) {
-                    for (int j = 0; j < UltimatePath[i].length; j++) {
-                        if (findPath[i][j].value != -1) {
-                            UltimatePath[i][j].faceValue = 0;
-                            UltimatePath[i][j].hiddenValue = 0;
-                        }
-
-                        if (i < 3) {
-                            UltimatePath[i][j].faceValue = -1;
-                            UltimatePath[i][j].hiddenValue = -1;
-                        }
-                    }
-                }
-
+            for (int c = 0;; c++) {
                 //region tree aktualis layer
                 ArrayList<UltimateCell> actualTreeLayer = tree.get(c).stepLayer;
                 ArrayList<int[]> actualSpeedLayer = tree.get(c).speedLayer;
@@ -234,21 +245,23 @@ public class SpeedTest extends RaceTrackPlayer {
 
                             //region valid lepes check
                             if (!(vanEzASpeed || vanFal)) {
+                                //region layer node add
                                 UltimatePath[newRow][newCol].hiddenValue = -2;
                                 UltimatePath[newRow][newCol].speedVectors.add(newSpeed);
                                 nextTreeLayer.add(UltimatePath[newRow][newCol]);
                                 nextSpeedLayer.add(newSpeed);
                                 nextDirectionLayer.add(j);
                                 nextLayerParents.add(i);
+                                //endregion
 
                                 //region cel check
-                                if (destNum<10){
+                                if (destNum<10){ //coin check
                                     if (newRow == to[0] && newCol == to[1]) {
                                         speedThroughIterations = newSpeed;
                                         tree.add(new TreeLayer(nextTreeLayer,nextSpeedLayer,nextDirectionLayer,nextLayerParents));
                                         break outerfor;
                                     }
-                                }else {
+                                }else { //finish check
                                     for (Cell finCell: finishCells) {
                                         if (newRow == finCell.i && newCol == finCell.j) {
                                             speedThroughIterations = newSpeed;
@@ -257,14 +270,13 @@ public class SpeedTest extends RaceTrackPlayer {
                                         }
                                     }
                                 }
-
-
                                 //endregion
                             }
-                            //==========================================================================================
-
+                            //endregion
+                            //region falba utkozes check
                             else if (vanFal) {
 
+                                //region calculate new landing cell
                                 UltimateCell wallHitUltimateCell = null;
                                 for (Cell falCell : line8connect(lastCell, newCell)) {
                                     if (isNotWall(falCell, track)) {
@@ -274,22 +286,31 @@ public class SpeedTest extends RaceTrackPlayer {
                                     }
                                 }
                                 assert wallHitUltimateCell != null;
+                                //endregion
 
-                                vanEzASpeed=false;
 
+                                //region uj sebesseg bealitasa
                                 newSpeed[0]= wallHitUltimateCell.i - actalUltimateCell.i;
                                 newSpeed[1]= wallHitUltimateCell.j - actalUltimateCell.j;
+                                //endregion
 
+                                //region check if speed is valid
+                                vanEzASpeed=false;
                                 for (int[] speed : wallHitUltimateCell.speedVectors) {
                                     if (speed[0] == newSpeed[0] && speed[1] == newSpeed[1]) {
                                         vanEzASpeed = true;
                                         break;
                                     }
                                 }
+                                //endregion
+
 
                                 int falRow = actalUltimateCell.i + newSpeed[0];
                                 int falCol = actalUltimateCell.j + newSpeed[1];
+
+                                //region speed check
                                 if (!vanEzASpeed){
+                                    //region layer node add
                                     UltimatePath[falRow][falCol].hiddenValue = -2;
                                     // ha szar szedd ki XD
                                     UltimatePath[falRow][falCol].speedVectors.add(new int[]{newSpeed[0],newSpeed[1]});
@@ -297,14 +318,16 @@ public class SpeedTest extends RaceTrackPlayer {
                                     nextSpeedLayer.add(new int[]{newSpeed[0],newSpeed[1]});
                                     nextDirectionLayer.add(j);
                                     nextLayerParents.add(i);
+                                    //endregion
 
-                                    if (destNum<10) {
+                                    //region cel check
+                                    if (destNum<10) { //coin check
                                         if (falRow == to[0] && falCol == to[1]) {
                                             speedThroughIterations = newSpeed;
                                             tree.add(new TreeLayer(nextTreeLayer, nextSpeedLayer, nextDirectionLayer, nextLayerParents));
                                             break outerfor;
                                         }
-                                    }else {
+                                    }else { //finish check
                                         for (Cell finCell: finishCells) {
                                             if (falRow == finCell.i && falCol == finCell.j) {
                                                 speedThroughIterations = newSpeed;
@@ -313,20 +336,12 @@ public class SpeedTest extends RaceTrackPlayer {
                                             }
                                         }
                                     }
-
+                                    //endregion
                                 }
-
-
-
-
-
+                                //endregion
                             }
-                            //==========================================================================================
                             //endregion
-
-
-                        } catch (Exception ignored) {
-                        }
+                        } catch (Exception ignored) {}
                     }
                     //endregion
                 }
@@ -340,7 +355,6 @@ public class SpeedTest extends RaceTrackPlayer {
 
 
             //region Path Calculate
-            ArrayList<UltimateCell> path = new ArrayList<>();
             ArrayList<Integer> pathDirections = new ArrayList<>();
             ArrayList<TreeLayer> finalPathInTheTree = new ArrayList<>();
 
@@ -354,63 +368,54 @@ public class SpeedTest extends RaceTrackPlayer {
             int innerListSize = lastStepList.size();
             //endregion
 
-
-
-            //regionget destination values
+            //region get destination values
             UltimateCell actualUltimateCell = lastStepList.get(innerListSize - 1);
             int[] actualSpeed = lastSpeedList.get(innerListSize - 1);
             int actualDirection = lastDirectionList.get(innerListSize - 1);
             int actualConnection = lastConnectionList.get(innerListSize - 1);
-
-
             //endregion
 
-
-
-
-
-
+            //region save destination values
             pathDirections.add(actualDirection);
-            path.add(actualUltimateCell);
             finalPathInTheTree.add(new TreeLayer());
             finalPathInTheTree.get(0).stepLayer.add(actualUltimateCell);
             finalPathInTheTree.get(0).speedLayer.add(actualSpeed);
             finalPathInTheTree.get(0).directionLayer.add(actualDirection);
             finalPathInTheTree.get(0).layerConnectionLayer.add(actualConnection);
+            //endregion
 
-
-
+            //region get layers
             for (int i = outerListSize - 2; i >= 1; i--) {
                 //region get layer
                 lastStepList = tree.get(i).stepLayer;
                 lastSpeedList = tree.get(i).speedLayer;
                 lastDirectionList = tree.get(i).directionLayer;
                 lastConnectionList = tree.get(i).layerConnectionLayer;
-
                 //endregion
 
-                //region get values
-
+                //region destination get values
                 actualUltimateCell = lastStepList.get(actualConnection);
                 actualSpeed = lastSpeedList.get(actualConnection);
                 actualDirection = lastDirectionList.get(actualConnection);
                 actualConnection = lastConnectionList.get(actualConnection);
                 //endregion
 
-                path.add(actualUltimateCell);
+                //region save destination values
                 pathDirections.add(actualDirection);
-
                 finalPathInTheTree.add(new TreeLayer());
                 finalPathInTheTree.get(finalPathInTheTree.size()-1).stepLayer.add(actualUltimateCell);
                 finalPathInTheTree.get(finalPathInTheTree.size()-1).speedLayer.add(actualSpeed);
                 finalPathInTheTree.get(finalPathInTheTree.size()-1).directionLayer.add(actualDirection);
                 finalPathInTheTree.get(finalPathInTheTree.size()-1).layerConnectionLayer.add(actualConnection);
+                //endregion
             }
+            //endregion
 
-            Collections.reverse(path);
+            //region order correction
             Collections.reverse(pathDirections);
             Collections.reverse(finalPathInTheTree);
-
+            //endregion
+            //endregion
 
             moveList.addAll(pathDirections);
 
@@ -419,38 +424,7 @@ public class SpeedTest extends RaceTrackPlayer {
         //endregion
     }
 
-    public static class TreeLayer {
-        ArrayList<UltimateCell> stepLayer = new ArrayList<>();
-        ArrayList<int[]> speedLayer = new ArrayList<>();
-        ArrayList<Integer> directionLayer = new ArrayList<>();
-        ArrayList<Integer> layerConnectionLayer = new ArrayList<>();
 
-        public TreeLayer(ArrayList<UltimateCell> stepLayer, ArrayList<int[]> speedLayer, ArrayList<Integer> directionLayer, ArrayList<Integer> layerConnectionLayer) {
-            this.stepLayer = stepLayer;
-            this.speedLayer = speedLayer;
-            this.directionLayer = directionLayer;
-            this.layerConnectionLayer = layerConnectionLayer;
-        }
-
-        public TreeLayer() {
-        }
-
-        public void setStepLayer(ArrayList<UltimateCell> stepLayer) {
-            this.stepLayer = stepLayer;
-        }
-
-        public void setSpeedLayer(ArrayList<int[]> speedLayer) {
-            this.speedLayer = speedLayer;
-        }
-
-        public void setDirectionLayer(ArrayList<Integer> directionLayer) {
-            this.directionLayer = directionLayer;
-        }
-
-        public void setLayerConnectionLayer(ArrayList<Integer> layerConnectionLayer) {
-            this.layerConnectionLayer = layerConnectionLayer;
-        }
-    }
 
 
 
