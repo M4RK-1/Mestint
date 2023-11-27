@@ -67,6 +67,8 @@ public class SpeedTest extends RaceTrackPlayer {
 
     public int[][] myTrack = track;
 
+    ArrayList<Cell> finishCells = new ArrayList<>();
+
     public int[][] distanceMatrix = new int[12][12];
 
     List<Integer> bestPath = null;
@@ -240,11 +242,23 @@ public class SpeedTest extends RaceTrackPlayer {
                                 nextLayerParents.add(i);
 
                                 //region cel check
-                                if (newRow == to[0] && newCol == to[1]) {
-                                    speedThroughIterations = newSpeed;
-                                    tree.add(new TreeLayer(nextTreeLayer,nextSpeedLayer,nextDirectionLayer,nextLayerParents));
-                                    break outerfor;
+                                if (destNum<10){
+                                    if (newRow == to[0] && newCol == to[1]) {
+                                        speedThroughIterations = newSpeed;
+                                        tree.add(new TreeLayer(nextTreeLayer,nextSpeedLayer,nextDirectionLayer,nextLayerParents));
+                                        break outerfor;
+                                    }
+                                }else {
+                                    for (Cell finCell: finishCells) {
+                                        if (newRow == finCell.i && newCol == finCell.j) {
+                                            speedThroughIterations = newSpeed;
+                                            tree.add(new TreeLayer(nextTreeLayer,nextSpeedLayer,nextDirectionLayer,nextLayerParents));
+                                            break outerfor;
+                                        }
+                                    }
                                 }
+
+
                                 //endregion
                             }
                             //==========================================================================================
@@ -284,10 +298,20 @@ public class SpeedTest extends RaceTrackPlayer {
                                     nextDirectionLayer.add(j);
                                     nextLayerParents.add(i);
 
-                                    if (falRow == to[0] && falCol == to[1]) {
-                                        speedThroughIterations = newSpeed;
-                                        tree.add(new TreeLayer(nextTreeLayer,nextSpeedLayer,nextDirectionLayer,nextLayerParents));
-                                        break outerfor;
+                                    if (destNum<10) {
+                                        if (falRow == to[0] && falCol == to[1]) {
+                                            speedThroughIterations = newSpeed;
+                                            tree.add(new TreeLayer(nextTreeLayer, nextSpeedLayer, nextDirectionLayer, nextLayerParents));
+                                            break outerfor;
+                                        }
+                                    }else {
+                                        for (Cell finCell: finishCells) {
+                                            if (falRow == finCell.i && falCol == finCell.j) {
+                                                speedThroughIterations = newSpeed;
+                                                tree.add(new TreeLayer(nextTreeLayer, nextSpeedLayer, nextDirectionLayer, nextLayerParents));
+                                                break outerfor;
+                                            }
+                                        }
                                     }
 
                                 }
@@ -475,6 +499,7 @@ public class SpeedTest extends RaceTrackPlayer {
                 } else if (myTrack[i][j] == 2) {
                     findPath[i][j] = new Agent.PositionWithParent(-1, i, j);
                 } else if (myTrack[i][j] == 5) {
+                    finishCells.add(new Cell(i,j));
                     findPath[i][j] = new Agent.PositionWithParent(-2, i, j);
                 } else if (myTrack[i][j] == 17) {
                     findPath[i][j] = new Agent.PositionWithParent(-3, i, j);
