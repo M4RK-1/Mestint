@@ -86,9 +86,13 @@ public class SpeedTest extends RaceTrackPlayer {
 
     public int[][] myTrack = track;
 
+    Agent.PositionWithParent[][] findPath;
+
     ArrayList<Cell> finishCells = new ArrayList<>();
 
     public int[][] distanceMatrix = new int[12][12];
+
+
 
     List<Integer> bestPath = null;
 
@@ -98,6 +102,8 @@ public class SpeedTest extends RaceTrackPlayer {
 
 
     public ArrayList<Integer> moveList = new ArrayList<>();
+
+    public ArrayList<TreeLayer> debugMoveList = new ArrayList<>();
     public int moveListCounter = -1;
 
     int[][] neighbors = {{0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}};
@@ -107,14 +113,16 @@ public class SpeedTest extends RaceTrackPlayer {
     public SpeedTest(PlayerState state, Random random, int[][] track, Coin[] coins, int color) {
         super(state, random, track, coins, color);
 
+        //region copymap
+        findPath = mainMapCopy();
+        //endregion
+
 
         //region coins order
         calculateBestOrderBetweenPoints(state, coins);
         //endregion
 
-        //region copymap
-        Agent.PositionWithParent[][] findPath = mainMapCopy();
-        //endregion
+
 
 
         //region cel kordinatak kinyerese
@@ -214,17 +222,16 @@ public class SpeedTest extends RaceTrackPlayer {
                         int[] newSpeed = new int[]{actualSpeed[0] + neighbor[0], actualSpeed[1] + neighbor[1]};
                         //endregion
 
-
                         //region falba utkozes check
-                        boolean vanFal = false;
                         Cell lastCell = new Cell(actalUltimateCell.i, actalUltimateCell.j);
                         Cell newCell = new Cell(inspectedUltimateCell.i, inspectedUltimateCell.j);
                         for (Cell utCell : line8connect(lastCell, newCell)) {
-                            if (!isNotWall(utCell, track)) {
-                                vanFal = true;
-                                break;
-                            } else {
+                            if (isNotWall(utCell, track)) {
                                 inspectedUltimateCell = UltimatePath[utCell.i][utCell.j];
+                                newSpeed[0] = inspectedUltimateCell.i - actalUltimateCell.i;
+                                newSpeed[1] = inspectedUltimateCell.j - actalUltimateCell.j;
+                            } else {
+                                break;
                             }
                         }
                         //endregion
@@ -240,26 +247,26 @@ public class SpeedTest extends RaceTrackPlayer {
                         //endregion
 
                         //region valid lepes check
-                        if (!(vanEzASpeed || vanFal)) {
+                        if (!(vanEzASpeed)) {
                             //region layer node add
-                            UltimatePath[newRow][newCol].hiddenValue = -2;
-                            UltimatePath[newRow][newCol].speedVectors.add(newSpeed);
-                            nextTreeLayer.add(UltimatePath[newRow][newCol]);
-                            nextSpeedLayer.add(newSpeed);
+                            UltimatePath[inspectedUltimateCell.i][inspectedUltimateCell.j].hiddenValue = -2;
+                            UltimatePath[inspectedUltimateCell.i][inspectedUltimateCell.j].speedVectors.add(new int[]{newSpeed[0], newSpeed[1]});
+                            nextTreeLayer.add(UltimatePath[inspectedUltimateCell.i][inspectedUltimateCell.j]);
+                            nextSpeedLayer.add(new int[]{newSpeed[0], newSpeed[1]});
                             nextDirectionLayer.add(j);
                             nextLayerParents.add(i);
                             //endregion
 
                             //region cel check
                             if (destNum < 10) { //coin check
-                                if (newRow == to[0] && newCol == to[1]) {
+                                if (inspectedUltimateCell.i == to[0] && inspectedUltimateCell.j == to[1]) {
                                     speedThroughIterations = newSpeed;
                                     tree.add(new TreeLayer(nextTreeLayer, nextSpeedLayer, nextDirectionLayer, nextLayerParents));
                                     break outerfor;
                                 }
                             } else { //finish check
                                 for (Cell finCell : finishCells) {
-                                    if (newRow == finCell.i && newCol == finCell.j) {
+                                    if (inspectedUltimateCell.i == finCell.i && inspectedUltimateCell.j == finCell.j) {
                                         speedThroughIterations = newSpeed;
                                         tree.add(new TreeLayer(nextTreeLayer, nextSpeedLayer, nextDirectionLayer, nextLayerParents));
                                         break outerfor;
@@ -268,75 +275,6 @@ public class SpeedTest extends RaceTrackPlayer {
                             }
                             //endregion
                         }
-                        //endregion
-                        //region falba utkozes check
-                        else if (vanFal) {
-
-                            //region calculate new landing cell
-                            UltimateCell wallHitUltimateCell = null;
-                            for (Cell falCell : line8connect(lastCell, newCell)) {
-                                if (isNotWall(falCell, track)) {
-                                    wallHitUltimateCell = UltimatePath[falCell.i][falCell.j];
-                                } else {
-                                    break;
-                                }
-                            }
-                            assert wallHitUltimateCell != null;
-                            //endregion
-
-
-                            //region uj sebesseg bealitasa
-                            newSpeed[0] = wallHitUltimateCell.i - actalUltimateCell.i;
-                            newSpeed[1] = wallHitUltimateCell.j - actalUltimateCell.j;
-                            //endregion
-
-                            //region check if speed is valid
-                            vanEzASpeed = false;
-                            for (int[] speed : wallHitUltimateCell.speedVectors) {
-                                if (speed[0] == newSpeed[0] && speed[1] == newSpeed[1]) {
-                                    vanEzASpeed = true;
-                                    break;
-                                }
-                            }
-                            //endregion
-
-                            int falRow = actalUltimateCell.i + newSpeed[0];
-                            int falCol = actalUltimateCell.j + newSpeed[1];
-
-                            //region speed check
-                            if (!vanEzASpeed) {
-                                //region layer node add
-                                UltimatePath[falRow][falCol].hiddenValue = -2;
-                                // ha szar szedd ki XD
-                                UltimatePath[falRow][falCol].speedVectors.add(new int[]{newSpeed[0], newSpeed[1]});
-                                nextTreeLayer.add(UltimatePath[falRow][falCol]);
-                                nextSpeedLayer.add(new int[]{newSpeed[0], newSpeed[1]});
-                                nextDirectionLayer.add(j);
-                                nextLayerParents.add(i);
-                                //endregion
-
-                                //region cel check
-                                if (destNum < 10) { //coin check
-                                    if (falRow == to[0] && falCol == to[1]) {
-                                        speedThroughIterations = newSpeed;
-                                        tree.add(new TreeLayer(nextTreeLayer, nextSpeedLayer, nextDirectionLayer, nextLayerParents));
-                                        break outerfor;
-                                    }
-                                } else { //finish check
-                                    for (Cell finCell : finishCells) {
-                                        if (falRow == finCell.i && falCol == finCell.j) {
-                                            speedThroughIterations = newSpeed;
-                                            tree.add(new TreeLayer(nextTreeLayer, nextSpeedLayer, nextDirectionLayer, nextLayerParents));
-                                            break outerfor;
-                                        }
-                                    }
-                                }
-                                //endregion
-                            }
-                            //endregion
-                        }
-                        //endregion
-
                     }
                     //endregion
                 }
@@ -344,6 +282,7 @@ public class SpeedTest extends RaceTrackPlayer {
                 //region layerek hozzaadasa a fahoz
                 tree.add(new TreeLayer(nextTreeLayer, nextSpeedLayer, nextDirectionLayer, nextLayerParents));
                 //endregion
+
 
             }
 
@@ -411,7 +350,9 @@ public class SpeedTest extends RaceTrackPlayer {
             //endregion
             //endregion
 
+
             moveList.addAll(pathDirections);
+            debugMoveList.addAll(finalPathInTheTree);
 
 
         }
@@ -422,7 +363,153 @@ public class SpeedTest extends RaceTrackPlayer {
     @Override
     public Direction getDirection(long remainingTime) {
         moveListCounter++;
+        /*
+        if (moveListCounter>0){
+            System.out.println("CURRENT: X SpeedTest p:("+debugMoveList.get(moveListCounter-1).stepLayer.get(0).i+", "+debugMoveList.get(moveListCounter-1).stepLayer.get(0).j+") v:("+debugMoveList.get(moveListCounter-1).speedLayer.get(0)[0]+", "+debugMoveList.get(moveListCounter-1).speedLayer.get(0)[1]+")");
+        }
+         */
+
         return RaceTrackGame.DIRECTIONS[moveList.get(moveListCounter)];
+    }
+
+    private int getDistanceBetweenTwoPoints(Cell start,Cell finish){
+
+        int[] from = new int[]{start.i,start.j};
+        int[] to = new int[]{finish.i,finish.j};
+
+
+        //region Map Generate
+        UltimateCell[][] UltimatePath = new UltimateCell[myTrack.length][myTrack[0].length];
+
+        for (int i = 0; i < UltimatePath.length; i++) {
+            for (int j = 0; j < UltimatePath[i].length; j++) {
+                UltimatePath[i][j] = new UltimateCell(-1, -1, i, j);
+            }
+        }
+
+        for (int i = 0; i < UltimatePath.length; i++) {
+            for (int j = 0; j < UltimatePath[i].length; j++) {
+                if (findPath[i][j].value != -1&&i >= 3) {
+                    UltimatePath[i][j].faceValue = 0;
+                    UltimatePath[i][j].hiddenValue = 0;
+                }
+            }
+        }
+        //endregion
+
+        //region fa struktura letrehozasa
+        ArrayList<TreeLayer> tree = new ArrayList<>();
+        //endregion
+
+
+
+        TreeLayer elsoLayer = new TreeLayer(new ArrayList<>() {{
+            add(UltimatePath[from[0]][from[1]]);
+        }},
+                new ArrayList<>() {{
+                    add(new int[]{0,0});
+                }},
+                new ArrayList<>() {{
+                    add(0);
+                }},
+                new ArrayList<>() {{
+                    add(0);
+                }}
+        );
+
+        tree.add(elsoLayer);
+        //endregion
+
+
+        outerfor:
+        for (int c = 0; ; c++) {
+            //region tree aktualis layer
+            ArrayList<UltimateCell> actualTreeLayer = tree.get(c).stepLayer;
+            ArrayList<int[]> actualSpeedLayer = tree.get(c).speedLayer;
+            //endregion
+
+            //region tree kovetkezo layer
+            ArrayList<UltimateCell> nextTreeLayer = new ArrayList<>();
+            ArrayList<int[]> nextSpeedLayer = new ArrayList<>();
+            ArrayList<Integer> nextDirectionLayer = new ArrayList<>();
+            ArrayList<Integer> nextLayerParents = new ArrayList<>();
+            //endregion
+
+
+            for (int i = 0; i < actualTreeLayer.size(); i++) {
+
+                //region aktualis cella adatok
+                UltimateCell actalUltimateCell = actualTreeLayer.get(i);
+                int[] actualSpeed = actualSpeedLayer.get(i);
+                //endregion
+
+
+                //region lehetseges lepesek check
+                for (int j = 0; j < vectorNeighbors.length; j++) {
+                    int[] neighbor = vectorNeighbors[j];
+                    int newRow = actalUltimateCell.i + actualSpeed[0] + neighbor[0];
+                    int newCol = actalUltimateCell.j + actualSpeed[1] + neighbor[1];
+
+                    //region vizsgalt cell adatok
+                    UltimateCell inspectedUltimateCell = new UltimateCell(newRow, newCol);
+                    int[] newSpeed = new int[]{actualSpeed[0] + neighbor[0], actualSpeed[1] + neighbor[1]};
+                    //endregion
+
+                    //region falba utkozes check
+                    Cell lastCell = new Cell(actalUltimateCell.i, actalUltimateCell.j);
+                    Cell newCell = new Cell(inspectedUltimateCell.i, inspectedUltimateCell.j);
+                    for (Cell utCell : line8connect(lastCell, newCell)) {
+                        if (isNotWall(utCell, track)) {
+                            inspectedUltimateCell = UltimatePath[utCell.i][utCell.j];
+                            newSpeed[0] = inspectedUltimateCell.i - actalUltimateCell.i;
+                            newSpeed[1] = inspectedUltimateCell.j - actalUltimateCell.j;
+                        } else {
+                            break;
+                        }
+                    }
+                    //endregion
+
+                    //region cellan mar meglevo speed check
+                    boolean vanEzASpeed = false;
+                    for (int[] speed : inspectedUltimateCell.speedVectors) {
+                        if (speed[0] == newSpeed[0] && speed[1] == newSpeed[1]) {
+                            vanEzASpeed = true;
+                            break;
+                        }
+                    }
+                    //endregion
+
+                    //region valid lepes check
+                    if (!(vanEzASpeed)) {
+                        //region layer node add
+                        UltimatePath[inspectedUltimateCell.i][inspectedUltimateCell.j].hiddenValue = -2;
+                        UltimatePath[inspectedUltimateCell.i][inspectedUltimateCell.j].speedVectors.add(new int[]{newSpeed[0], newSpeed[1]});
+                        nextTreeLayer.add(UltimatePath[inspectedUltimateCell.i][inspectedUltimateCell.j]);
+                        nextSpeedLayer.add(new int[]{newSpeed[0], newSpeed[1]});
+                        nextDirectionLayer.add(j);
+                        nextLayerParents.add(i);
+                        //endregion
+
+                        //region cel check
+                            if (inspectedUltimateCell.i == to[0] && inspectedUltimateCell.j == to[1]) {
+                                tree.add(new TreeLayer(nextTreeLayer, nextSpeedLayer, nextDirectionLayer, nextLayerParents));
+                                break outerfor;
+                            }
+                        //endregion
+                    }
+                }
+                //endregion
+            }
+
+            //region layerek hozzaadasa a fahoz
+            tree.add(new TreeLayer(nextTreeLayer, nextSpeedLayer, nextDirectionLayer, nextLayerParents));
+            //endregion
+
+
+        }
+
+        return tree.size();
+
     }
 
     /**
@@ -509,10 +596,9 @@ public class SpeedTest extends RaceTrackPlayer {
         }
 
 
-        for (int actualNumber = -1; actualNumber > -13; actualNumber--) {
-            getAllDistances(findPath2, actualNumber);
-        }
 
+
+        getAllDistances2();
 
         int[] nums = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         List<int[]> permutations = new ArrayList<>();
@@ -624,6 +710,29 @@ public class SpeedTest extends RaceTrackPlayer {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private void getAllDistances2() {
+        ArrayList<Cell> cordinates = new ArrayList<>();
+        cordinates.add(new Cell(2,7));
+        for (Coin coin:coins) {
+            cordinates.add(new Cell(coin.i, coin.j));
+        }
+        cordinates.add(new Cell(3,127));
+
+        for (int i = 0; i < cordinates.size(); i++) {
+            for (int j = i; j < cordinates.size(); j++) {
+                if (i==j){
+                    distanceMatrix[i][j]=0;
+                }
+
+                int tmp = getDistanceBetweenTwoPoints(cordinates.get(i),cordinates.get(j));
+                distanceMatrix[i][j]=tmp;
+                distanceMatrix[j][i]=tmp;
+
+
             }
         }
     }
