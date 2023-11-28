@@ -10,6 +10,7 @@ import game.racetrack.utils.PlayerState;
 import java.util.*;
 
 import static game.racetrack.RaceTrackGame.*;
+import static java.lang.Math.abs;
 
 public class Agent extends RaceTrackPlayer {
 
@@ -289,10 +290,6 @@ public class Agent extends RaceTrackPlayer {
                                         lastDirectionLayer.add(j);
                                         lastLayerParents.add(i);
                                         chokeTreeCounter++;
-                                        if (chokeTreeCounter==2){
-                                            tree.add(new TreeLayer(lastTreeLayer, lastSpeedLayer, lastDirectionLayer, lastLayerParents));
-                                            break outerfor;
-                                        }
                                     }
                                 }
                             } else { //finish check
@@ -609,7 +606,29 @@ public class Agent extends RaceTrackPlayer {
      * @param coins 'Coin' objektumok tombje, amely a track-en levo coin-ok at tartalmazza
      */
     private void calculateBestOrderBetweenPoints(Coin[] coins) {
-        getAllDistances2();
+        int[][] findPath2 = new int[myTrack.length][myTrack[0].length];
+        for (int i = 0; i < myTrack.length; i++) {
+            for (int j = 0; j < myTrack[i].length; j++) {
+                if (myTrack[i][j] == 1) {
+                    findPath2[i][j] = 0;
+                } else if (myTrack[i][j] == 2) {
+                    findPath2[i][j] = -100;
+                } else if (myTrack[i][j] == 5) {
+                    findPath2[i][j] = -12;
+                } else if (myTrack[i][j] == 33) {
+                    findPath2[i][j] = 0;
+                } else {
+                    findPath2[i][j] = -100;
+                }
+                findPath2[state.i][state.j] = -1;
+            }
+        }
+        for (int j = 0; j < coins.length; j++) {
+            findPath2[coins[j].i][coins[j].j] = ((j + 2) * -1);
+        }
+        for (int actualNumber = -1; actualNumber > -13; actualNumber--) {
+            getAllDistances(findPath2, actualNumber);
+        }
 
         int[] nums = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         List<int[]> permutations = new ArrayList<>();
@@ -639,6 +658,48 @@ public class Agent extends RaceTrackPlayer {
             if (index == 0) destinationList.add(new Cell(2, 7));
             else if (index == 11) destinationList.add(new Cell(3, 127));
             else destinationList.add(new Cell(coins[index - 1].i, coins[index - 1].j));
+        }
+    }
+
+    /**
+     * Kiszamiolja egy adott cel-tol a tobbi cel tavolsagat
+     * Ezt elment a 'distanceMatrix' tombbe
+     *
+     * @param findPath     A kezdeti map
+     * @param actualNumber A kiindulasi pont indexe, innen szamoljuk a tavolsagokat
+     */
+    private void getAllDistances(int[][] findPath, int actualNumber) {
+
+        int[][] neighbors = {{0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}};
+        int[][] distanceMap = new int[myTrack.length][myTrack[0].length];
+        for (int i = 0; i < findPath.length; i++) {
+            System.arraycopy(findPath[i], 0, distanceMap[i], 0, findPath[i].length);
+        }
+
+        ArrayList<Integer> erintettCelok = new ArrayList<>();
+        erintettCelok.add(actualNumber);
+        distanceMatrix[abs(actualNumber) - 1][abs(actualNumber) - 1] = 0;
+
+        int c;
+        for (c = 1; c < 1000; c++) {
+            for (int i = 0; i < distanceMap.length; i++) {
+                for (int j = 0; j < distanceMap[0].length; j++) {
+                    if (distanceMap[i][j] == actualNumber || (distanceMap[i][j] == c - 1 && distanceMap[i][j] != actualNumber && distanceMap[i][j] != 0)) {
+                        for (int[] neighbor : neighbors) {
+                            int newRow = i + neighbor[0];
+                            int newCol = j + neighbor[1];
+                            try {
+                                if (distanceMap[newRow][newCol] == 0) distanceMap[newRow][newCol] = c;
+                                else if (distanceMap[newRow][newCol] < 0 && distanceMap[newRow][newCol] != -100 && !erintettCelok.contains(distanceMap[newRow][newCol])) {
+                                    erintettCelok.add(distanceMap[newRow][newCol]);
+                                    distanceMatrix[abs(actualNumber) - 1][abs(distanceMap[newRow][newCol]) - 1] = c;
+                                }
+                            } catch (Exception ignored) {
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
