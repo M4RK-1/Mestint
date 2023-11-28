@@ -104,7 +104,6 @@ public class SpeedTest extends RaceTrackPlayer {
     public ArrayList<TreeLayer> debugMoveList = new ArrayList<>();
     public int moveListCounter = -1;
 
-    int[][] neighbors = {{0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}};
 
     int[][] vectorNeighbors = {{0, 0}, {0, -1}, {-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}};
 
@@ -117,7 +116,7 @@ public class SpeedTest extends RaceTrackPlayer {
 
 
         //region coins order
-        calculateBestOrderBetweenPoints(state, coins);
+        calculateBestOrderBetweenPoints(coins);
         //endregion
 
 
@@ -126,16 +125,20 @@ public class SpeedTest extends RaceTrackPlayer {
         //endregion
 
 
-        //region init ======================================================================================
 
 
 
+
+        //region map letrehozas
         UltimateCell[][] UltimatePath = new UltimateCell[myTrack.length][myTrack[0].length];
         for (int i = 0; i < UltimatePath.length; i++) {
             for (int j = 0; j < UltimatePath[i].length; j++) {
                 UltimatePath[i][j] = new UltimateCell(-1, -1, i, j);
             }
         }
+        //endregion
+
+        //region map feltoltese
         for (int i = 0; i < UltimatePath.length; i++) {
             for (int j = 0; j < UltimatePath[i].length; j++) {
                 if (findPath[i][j].value != -1) {
@@ -149,12 +152,14 @@ public class SpeedTest extends RaceTrackPlayer {
                 }
             }
         }
+        //endregion
 
         //region fa struktura letrehozasa
         ArrayList<TreeLayer> tree = new ArrayList<>();
         //endregion
 
 
+        //region fa elso layer
         UltimateCell tmpUCell = UltimatePath[2][7];
         tmpUCell.speedVectors.add(new int[]{0,0});
         TreeLayer elsoLayer = new TreeLayer(new ArrayList<>() {{
@@ -172,16 +177,12 @@ public class SpeedTest extends RaceTrackPlayer {
         );
 
         tree.add(elsoLayer);
-        //endregion  ======================================================================================
-
+        //endregion
 
 
         for (int destNum = 0; destNum < destinationCordinates.size() - 1; destNum++) {
-            int[] to = new int[]{destinationCordinates.get(destNum + 1)[0], destinationCordinates.get(destNum + 1)[1]};
             int chokeTreeCounter = 0;
-
-            //System.out.println("destnum="+destNum);
-            //System.out.println(tree.get(tree.size()-1));
+            int[] to = new int[]{destinationCordinates.get(destNum + 1)[0], destinationCordinates.get(destNum + 1)[1]};
 
             //region Map Generate
             UltimatePath = new UltimateCell[myTrack.length][myTrack[0].length];
@@ -206,11 +207,11 @@ public class SpeedTest extends RaceTrackPlayer {
             //endregion
 
 
-            //endregion
 
 
+            //region lepes szamolas
             outerfor:
-            for (int c = 0; ; c++) {
+            while (true){
                 //region tree aktualis layer
                 ArrayList<UltimateCell> actualTreeLayer = tree.get(tree.size()-1).stepLayer;
                 ArrayList<int[]> actualSpeedLayer = tree.get(tree.size()-1).speedLayer;
@@ -223,10 +224,12 @@ public class SpeedTest extends RaceTrackPlayer {
                 ArrayList<Integer> nextLayerParents = new ArrayList<>();
                 //endregion
 
+                //region tree kapcsolati layer
                 ArrayList<UltimateCell> lastTreeLayer = new ArrayList<>();
                 ArrayList<int[]> lastSpeedLayer = new ArrayList<>();
                 ArrayList<Integer> lastDirectionLayer = new ArrayList<>();
                 ArrayList<Integer> lastLayerParents = new ArrayList<>();
+                //endregion
 
 
                 for (int i = 0; i < actualTreeLayer.size(); i++) {
@@ -309,11 +312,13 @@ public class SpeedTest extends RaceTrackPlayer {
                     //endregion
                 }
 
-                //region layerek hozzaadasa a fahoz
+                //region kapcsolat layer hozzaadasa a fahoz
                 if (chokeTreeCounter!=0){
                     tree.add(new TreeLayer(lastTreeLayer, lastSpeedLayer, lastDirectionLayer, lastLayerParents));
                     break;
                 }
+                //endregion
+                //region layer hozzaadasa a fahoz
                 tree.add(new TreeLayer(nextTreeLayer, nextSpeedLayer, nextDirectionLayer, nextLayerParents));
                 //endregion
 
@@ -394,15 +399,16 @@ public class SpeedTest extends RaceTrackPlayer {
     @Override
     public Direction getDirection(long remainingTime) {
         moveListCounter++;
-
-        //if (moveListCounter>0){
-            //System.out.println("CURRENT: X SpeedTest p:("+debugMoveList.get(moveListCounter-1).stepLayer.get(0).i+", "+debugMoveList.get(moveListCounter-1).stepLayer.get(0).j+") v:("+debugMoveList.get(moveListCounter-1).speedLayer.get(0)[0]+", "+debugMoveList.get(moveListCounter-1).speedLayer.get(0)[1]+")");
-        //}
-
-
         return RaceTrackGame.DIRECTIONS[moveList.get(moveListCounter)];
     }
 
+    /**
+     * Kiszamolja a tavolsagot ket Cell kozott
+     *
+     * @param start Start cella
+     * @param finish Cel cella
+     * @return a ket pont kozotti tavolsag a mappon
+     */
     private int getDistanceBetweenTwoPoints(Cell start, Cell finish) {
 
         int[] from = new int[]{start.i, start.j};
@@ -602,33 +608,10 @@ public class SpeedTest extends RaceTrackPlayer {
 
     /**
      * Kiszamolja a legrovidebb utvonalat a celok kozott fix elso es utolso pontal
-     * A tavolsagot a pontok kozott egy bfs-futtatasaval hatarozom meg
      *
-     * @param state A jatekos jelenlegi allapota, ebbol csak a poziccioja kell
      * @param coins 'Coin' objektumok tombje, amely a track-en levo coin-ok at tartalmazza
      */
-    private void calculateBestOrderBetweenPoints(PlayerState state, Coin[] coins) {
-        int[][] findPath2 = new int[myTrack.length][myTrack[0].length];
-        for (int i = 0; i < myTrack.length; i++) {
-            for (int j = 0; j < myTrack[i].length; j++) {
-                if (myTrack[i][j] == 1) {
-                    findPath2[i][j] = 0;
-                } else if (myTrack[i][j] == 2) {
-                    findPath2[i][j] = -100;
-                } else if (myTrack[i][j] == 5) {
-                    findPath2[i][j] = -12;
-                } else if (myTrack[i][j] == 33) {
-                    findPath2[i][j] = 0;
-                } else {
-                    findPath2[i][j] = -100;
-                }
-                findPath2[state.i][state.j] = -1;
-            }
-        }
-        for (int j = 0; j < coins.length; j++) {
-            findPath2[coins[j].i][coins[j].j] = ((j + 2) * -1);
-        }
-
+    private void calculateBestOrderBetweenPoints( Coin[] coins) {
         getAllDistances2();
 
         int[] nums = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -705,46 +688,10 @@ public class SpeedTest extends RaceTrackPlayer {
     }
 
     /**
-     * Kiszamiolja egy adott cel-tol a tobbi cel tavolsagat
-     * Ezt elment a 'distanceMatrix' tombbe
+     * Kiszamiolja az osszes cel-tol a tobbi celig a tavolsagat
+     * Ezt elment a 'distanceMatrix' tomb-be
      *
-     * @param findPath     A kezdeti map
-     * @param actualNumber A kiindulasi pont indexe, innen szamoljuk a tavolsagokat
      */
-    private void getAllDistances(int[][] findPath, int actualNumber) {
-
-        int[][] distanceMap = new int[myTrack.length][myTrack[0].length];
-        for (int i = 0; i < findPath.length; i++) {
-            System.arraycopy(findPath[i], 0, distanceMap[i], 0, findPath[i].length);
-        }
-
-        ArrayList<Integer> erintettCelok = new ArrayList<>();
-        erintettCelok.add(actualNumber);
-        distanceMatrix[abs(actualNumber) - 1][abs(actualNumber) - 1] = 0;
-
-        int c;
-        for (c = 1; c < 1000; c++) {
-            for (int i = 0; i < distanceMap.length; i++) {
-                for (int j = 0; j < distanceMap[0].length; j++) {
-                    if (distanceMap[i][j] == actualNumber || (distanceMap[i][j] == c - 1 && distanceMap[i][j] != actualNumber && distanceMap[i][j] != 0)) {
-                        for (int[] neighbor : neighbors) {
-                            int newRow = i + neighbor[0];
-                            int newCol = j + neighbor[1];
-                            try {
-                                if (distanceMap[newRow][newCol] == 0) distanceMap[newRow][newCol] = c;
-                                else if (distanceMap[newRow][newCol] < 0 && distanceMap[newRow][newCol] != -100 && !erintettCelok.contains(distanceMap[newRow][newCol])) {
-                                    erintettCelok.add(distanceMap[newRow][newCol]);
-                                    distanceMatrix[abs(actualNumber) - 1][abs(distanceMap[newRow][newCol]) - 1] = c;
-                                }
-                            } catch (Exception ignored) {
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private void getAllDistances2() {
         ArrayList<Cell> cordinates = new ArrayList<>();
         cordinates.add(new Cell(2, 7));
