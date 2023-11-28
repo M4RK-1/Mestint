@@ -289,6 +289,10 @@ public class Agent extends RaceTrackPlayer {
                                         lastDirectionLayer.add(j);
                                         lastLayerParents.add(i);
                                         chokeTreeCounter++;
+                                        if (chokeTreeCounter==2){
+                                            tree.add(new TreeLayer(lastTreeLayer, lastSpeedLayer, lastDirectionLayer, lastLayerParents));
+                                            break outerfor;
+                                        }
                                     }
                                 }
                             } else { //finish check
